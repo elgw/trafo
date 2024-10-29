@@ -68,5 +68,5 @@ if __name__ == '__main__':
 
     t3 = time.perf_counter()
     print(clf.get_params())
-    # print_peak_memory()
+    print_peak_memory()
     print(f"sk_timing: Training: {t2-t1:.4f} Prediction {t3-t2:.4f}")

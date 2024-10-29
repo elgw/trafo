@@ -1,8 +1,14 @@
-**trafo** (version 0.1.0) is a tiny and limited but quite performant,
-[random forest](https://en.wikipedia.org/wiki/Random_forest)
-library.
+**trafo** (version 0.1.0) is a tiny and limited
+but quite performant, [random
+forest](https://en.wikipedia.org/wiki/Random_forest) library.
+
+Why? For my own amusement and self-education, and because I needed
+something small.
 
 Features and Limitations
+
+- No support. Only smoke tested.
+- Tiny: 3 < kSLOC. `libtrafo.so` is 43K (version 0.1.0).
 - Trees are trained in parallel using OpenMP.
 - Features are only sorted once. Book keeping maintains this property
  throughout the tree constructions.
@@ -17,6 +23,9 @@ Features and Limitations
   library on tsv-formated data. The tsv parser is very limited.
 - Paramerers include: - The number of trees. - Fraction of samples per
   tree. - Number of features per tree.
+- Internally, features are floats with double precision and labels are
+  uint32. In 99% of all application it would probably be better with
+  the combination of single precision and uint16. That is on the todo list.
 
 ## Basic Library Usage
 
@@ -56,7 +65,7 @@ see `trafo.h` for the full API. For more examples, look in `trafo_cli.c`.
 
 Benchmarks should, among other things, provide averages over multiple
 runs. There are only results from single runs reported here. Test
-system: AMD Ryzen 3 PRO 3300U.
+system: 4-core AMD Ryzen 3 PRO 3300U.
 
 The memory usage metric not directly comparable since the values for
 **trafo** includes the whole cli interface.  For skl it is
@@ -73,9 +82,19 @@ clf = clf.fit(X, Y)
 mem1 = get_peak_memory()
 delta_rss = mem1-mem0
 ```
-
-
 See `test/run_on_test_data.sh` for the full code.
+
+Datasets:
+
+| Name          | Samples | Features | Classes |
+|---------------|---------|----------|---------|
+| iris          | 150     | 5        | 3       |
+| digits        | 1797    | 64       | 10      |
+| wine          | 178     | 13       | 3       |
+| breast_cancer | 569     | 30       | 2       |
+| diabetes      | 442     | 10       | 347     |
+| rand          | 100000  | 100      | 2       |
+
 
 ### A single tree
 
@@ -92,11 +111,13 @@ In this case for scikit-learn the following settings were used:
 | trafo | wine          | 0.006    | 2456     | 100%     |
 | trafo | breast_cancer | 0.003    | 2928     | 100%     |
 | trafo | diabetes      | 0.016    | 2648     | 100%     |
+| trafo | rand          | 3.256    | 323660   | 100%     |
 | skl   | iris          | 0.015    | 1612     | 100%     |
 | skl   | digits        | 0.036    | 2192     | 100%     |
 | skl   | wine          | 0.016    | 1428     | 100%     |
 | skl   | breast_cancer | 0.016    | 1428     | 100%     |
 | skl   | diabetes      | 0.027    | 3712     | 100%     |
+| sk1   | rand          | 13.96    | 48344    | 100%     |
 
 
 ## A forest with 100 trees
@@ -107,23 +128,28 @@ skl settings:
 ```
 
 | bin   | dataset       | time (s) | RSS (kb) | accuracy |
-|-------|---------------|----------|------------|----------|
-| trafo | iris          | 0.045    | 2548       | 100%     |
-| trafo | digits        | 0.094    | 6940       | 100%     |
-| trafo | wine          | 0.004    | 2755       | 100%     |
-| trafo | breast_cancer | 0.015    | 3416       | 100%     |
-| trafo | diabetes      | 0.121    | 3344       | 100%     |
-| skl   | iris          | 0.186    | 2208       | 100%     |
-| skl   | digits        | 0.225    | 9412       | 100%     |
-| skl   | wine          | 0.198    | 2512       | 100%     |
-| skl   | breast_cancer | 0.192    | 2340       | 100%     |
-| skl   | diabetes      | 0.224    | 98548      | 100%     |
+|-------|---------------|----------|----------|----------|
+| trafo | iris          | 0.045    | 2548     | 100%     |
+| trafo | digits        | 0.094    | 6940     | 100%     |
+| trafo | wine          | 0.004    | 2755     | 100%     |
+| trafo | breast_cancer | 0.015    | 3416     | 100%     |
+| trafo | diabetes      | 0.121    | 3344     | 100%     |
+| trafo | rand          | 6.97     | 283088   | 100%     |
+| skl   | iris          | 0.186    | 2208     | 100%     |
+| skl   | digits        | 0.225    | 9412     | 100%     |
+| skl   | wine          | 0.198    | 2512     | 100%     |
+| skl   | breast_cancer | 0.192    | 2340     | 100%     |
+| skl   | diabetes      | 0.224    | 98548    | 100%     |
+| sk1   | rand          | 31.80    | 283560   | 100%     |
 
 
 ## Installation
 Use cmake with the `CMakeLists.txt` file.
 
+## To do
+- [ ] Feature importance estimation.
+- [ ] single precision/uint16 option for reduced memory usage.
 
 ## See also
-- [scikit-learn](https://scikit-learn.org/1.5/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
-  this should be your first stop.
+- Your first stop shoud be
+  [scikit-learn](https://scikit-learn.org/1.5/modules/generated/sklearn.ensemble.RandomForestClassifier.html).
