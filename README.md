@@ -148,7 +148,9 @@ Use cmake with the `CMakeLists.txt` file.
 
 ## To do
 - [ ] Feature importance estimation.
-- [ ] single precision/uint16 option for reduced memory usage.
+- [ ] Single precision features/uint16 labels option for reduced
+      memory usage. Or as default.
+- [ ] Complete the `CMakeLists.txt` with installation instructions.
 
 ## See also
 - Your first stop shoud be
