@@ -67,12 +67,13 @@ Benchmarks should, among other things, provide averages over multiple
 runs. There are only results from single runs reported here. Test
 system: 4-core AMD Ryzen 3 PRO 3300U.
 
-The memory usage metric not directly comparable since the values for
-**trafo** includes the whole cli interface.  For skl it is
-just the delta value, memory before and after the call to the `.fit`
-method.
+The random forest inplementation in scikit-learn is denoted skl in the
+tables below. The memory usage metric not directly comparable since
+the values for **trafo** includes the whole cli interface.  For skl it
+is just the delta value, i.e. difference in RSS memory before and
+after the call to the `.fit` method.
 
-i.e., something like:
+This is measured with a procedure like this:
 
 ``` python
 mem0 = get_peak_memory()
