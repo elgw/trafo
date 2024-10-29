@@ -2,6 +2,11 @@
 
 #include <stdint.h>
 
+#define TRAFO_VERSION_MAJOR 0
+#define TRAFO_VERSION_MINOR 1
+#define TRAFO_VERSION_PATCH 0
+
+
 /* These are the configuration options for the Random Forest
  * fitting/creation
  *
@@ -50,7 +55,7 @@ typedef struct {
      *
      * Default: will be set to 0.632 if set to 0
      */
-    float tree_f_sample; // TODO: use fraction
+    float tree_f_sample;
 
     /* Number of feature per tree.
      *
