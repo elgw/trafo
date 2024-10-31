@@ -1,9 +1,7 @@
-**trafo** (version 0.1.0) is a tiny and limited
-but quite performant, [random
-forest](https://en.wikipedia.org/wiki/Random_forest) library.
-
-Why? For my own amusement and self-education, and because I needed
-something small. Feel free to steal/fork/use or have fun finding bugs.
+**trafo** (version 0.1.0) is a tiny [random
+forest](https://en.wikipedia.org/wiki/Random_forest)ish library. Most
+likely this isn't what you are looking fore, but free to copy/fork/use
+or have fun finding bugs.
 
 Features and Limitations
 
@@ -32,7 +30,7 @@ Features and Limitations
 Train a classifier on labelled data and save it to disk:
 
 ``` C
-#include "elgw/trafo.h"
+#include <trafo.h>
 
 // Basic configuration
 trafo_conf C = {0};
@@ -53,12 +51,10 @@ trafo_save(T, "classifier.trafo");
 trafo_free(T); // And done
 ```
 
-add `-ltrafo` to the linker flags when compiling.
-
 Load a classifier and apply it to some data
 
 ``` C
-#include "elgw/trafo.h"
+#include <trafo.h>
 
 trafo * T = trafo_load("classifier.trafo");
 uint32_t * class = trafo_predict(T, features, NULL, n_features);
@@ -105,13 +101,7 @@ Datasets:
 
 ### A single tree
 
-The scikit-learn settings were:
-
-``` Python
-{'bootstrap': False, 'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'gini', 'max_depth': None, 'max_features': 10, 'max_leaf_nodes': None, 'max_samples': None, 'min_impurity_decrease': 0.0, 'min_samples_leaf': 1, 'min_samples_split': 2, 'min_weight_fraction_leaf': 0.0, 'monotonic_cst': None, 'n_estimators': 1, 'n_jobs': -1, 'oob_score': False, 'random_state': None, 'verbose': 0, 'warm_start': False}
-```
-
-what is changed compare to the defaults are:
+The scikit-learn package was configured by:
 
 ``` python
 clf = RandomForestClassifier(n_estimators=1)
@@ -120,6 +110,14 @@ clf.bootstrap = False
 clf.max_features=X.shape[1]
 clf.min_samples_split=2
 ```
+
+giving these settings:
+
+``` Python
+{'bootstrap': False, 'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'gini', 'max_depth': None, 'max_features': 10, 'max_leaf_nodes': None, 'max_samples': None, 'min_impurity_decrease': 0.0, 'min_samples_leaf': 1, 'min_samples_split': 2, 'min_weight_fraction_leaf': 0.0, 'monotonic_cst': None, 'n_estimators': 1, 'n_jobs': -1, 'oob_score': False, 'random_state': None, 'verbose': 0, 'warm_start': False}
+```
+
+Results for tree construction:
 
 | bin   | dataset       | time (s) | RSS (kb) |
 |-------|---------------|----------|---------:|
@@ -140,7 +138,8 @@ In all cases the input data is correctly classified.
 
 ## A forest with 100 trees
 
-For this test, skl was run setting:
+For this test, skl was run by:
+
 ``` python
 clf = RandomForestClassifier(n_estimators=100)
 clf.n_jobs=-1
@@ -162,10 +161,11 @@ clf.min_samples_split=2
 | skl   | diabetes      | 0.224    |    98548 |
 | sk1   | rand          | 31.80    |   283560 |
 
-What stands out here is the diabetes dataset, which has a high number
-of classes, where skl use much more memory than trafo.
+The skl memory usage stand out on the diabetes dataset, due to the high
+number of classes?
 
 ## Installation
+
 Use cmake with the `CMakeLists.txt` file, something like this should
 do:
 
@@ -176,12 +176,15 @@ cmake ..
 sudo make install
 ```
 
+Then just add `-ltrafo` to the linker flags of your project.
+
 ## To do
 - [ ] Feature importance estimation.
 - [ ] Single precision features/uint16 labels option for reduced
       memory usage.
-- [ ] Complete the `CMakeLists.txt` with installation instructions.
 
 ## See also
-- Your first stop shoud be
+- Python:
   [scikit-learn](https://scikit-learn.org/1.5/modules/generated/sklearn.ensemble.RandomForestClassifier.html).
+- R: [randomForest](https://cran.r-project.org/web/packages/randomForest/index.html)
+- MATAB: [TreeBagger](https://www.mathworks.com/help/stats/treebagger.html)
