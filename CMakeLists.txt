@@ -13,9 +13,16 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
+# Don't install to /usr/local/ use /usr/
+set( CMAKE_INSTALL_PREFIX
+  /usr )
 
 add_library(trafo SHARED
   src/qsort.c src/trafo.c src/trafo_util.c src/sortbox.c)
+
+set(TRAFO_PUBLIC_HEADERS
+  "src/trafo.h"
+)
 
 add_executable(trafo_cli
   src/qsort.c src/trafo.c src/trafo_cli.c src/trafo_util.c src/ftab.c src/sortbox.c)
@@ -61,3 +68,13 @@ if(result)
 else()
   message(WARNING "IPO is not supported: ${output}")
 endif()
+
+include("GNUInstallDirs")
+
+set_target_properties( trafo PROPERTIES
+  PUBLIC_HEADER "${TRAFO_PUBLIC_HEADERS}")
+
+INSTALL(TARGETS trafo
+  PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_FULL_INCLUDEDIR}"
+  LIBRARY DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
+)
