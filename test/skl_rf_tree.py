@@ -49,7 +49,6 @@ if __name__ == '__main__':
     mem0 = get_peak_memory()
     t1 = time.perf_counter()
     clf = RandomForestClassifier(n_estimators=1)
-
     clf.n_jobs=-1
     clf.max_features=X.shape[1]
     clf.min_samples_split=2

@@ -111,20 +111,30 @@ The scikit-learn settings were:
 {'bootstrap': False, 'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'gini', 'max_depth': None, 'max_features': 10, 'max_leaf_nodes': None, 'max_samples': None, 'min_impurity_decrease': 0.0, 'min_samples_leaf': 1, 'min_samples_split': 2, 'min_weight_fraction_leaf': 0.0, 'monotonic_cst': None, 'n_estimators': 1, 'n_jobs': -1, 'oob_score': False, 'random_state': None, 'verbose': 0, 'warm_start': False}
 ```
 
+what is changed compare to the defaults are:
+
+``` python
+clf = RandomForestClassifier(n_estimators=1)
+clf.n_jobs=-1
+clf.bootstrap = False
+clf.max_features=X.shape[1]
+clf.min_samples_split=2
+```
+
 | bin   | dataset       | time (s) | RSS (kb) |
-|-------|---------------|----------|----------|
-| trafo | iris          | 0.002    | 2436     |
-| trafo | digits        | 0.020    | 6152     |
-| trafo | wine          | 0.006    | 2456     |
-| trafo | breast_cancer | 0.003    | 2928     |
-| trafo | diabetes      | 0.016    | 2648     |
-| trafo | rand          | 3.256    | 323660   |
-| skl   | iris          | 0.015    | 1612     |
-| skl   | digits        | 0.036    | 2192     |
-| skl   | wine          | 0.016    | 1428     |
-| skl   | breast_cancer | 0.016    | 1428     |
-| skl   | diabetes      | 0.027    | 3712     |
-| sk1   | rand          | 13.96    | 48344    |
+|-------|---------------|----------|---------:|
+| trafo | iris          | 0.002    |     2436 |
+| trafo | digits        | 0.020    |     6152 |
+| trafo | wine          | 0.006    |     2456 |
+| trafo | breast_cancer | 0.003    |     2928 |
+| trafo | diabetes      | 0.016    |     2648 |
+| trafo | rand          | 3.256    |   323660 |
+| skl   | iris          | 0.015    |     1612 |
+| skl   | digits        | 0.036    |     2192 |
+| skl   | wine          | 0.016    |     1428 |
+| skl   | breast_cancer | 0.016    |     1428 |
+| skl   | diabetes      | 0.027    |     3712 |
+| sk1   | rand          | 13.96    |    48344 |
 
 In all cases the input data is correctly classified.
 
@@ -137,19 +147,19 @@ For this test, the following skl settings were changed:
 ```
 
 | bin   | dataset       | time (s) | RSS (kb) |
-|-------|---------------|----------|----------|
-| trafo | iris          | 0.045    | 2548     |
-| trafo | digits        | 0.094    | 6940     |
-| trafo | wine          | 0.004    | 2755     |
-| trafo | breast_cancer | 0.015    | 3416     |
-| trafo | diabetes      | 0.121    | 3344     |
-| trafo | rand          | 6.97     | 283088   |
-| skl   | iris          | 0.186    | 2208     |
-| skl   | digits        | 0.225    | 9412     |
-| skl   | wine          | 0.198    | 2512     |
-| skl   | breast_cancer | 0.192    | 2340     |
-| skl   | diabetes      | 0.224    | 98548    |
-| sk1   | rand          | 31.80    | 283560   |
+|-------|---------------|----------|---------:|
+| trafo | iris          | 0.045    |     2548 |
+| trafo | digits        | 0.094    |     6940 |
+| trafo | wine          | 0.004    |     2755 |
+| trafo | breast_cancer | 0.015    |     3416 |
+| trafo | diabetes      | 0.121    |     3344 |
+| trafo | rand          | 6.97     |   283088 |
+| skl   | iris          | 0.186    |     2208 |
+| skl   | digits        | 0.225    |     9412 |
+| skl   | wine          | 0.198    |     2512 |
+| skl   | breast_cancer | 0.192    |     2340 |
+| skl   | diabetes      | 0.224    |    98548 |
+| sk1   | rand          | 31.80    |   283560 |
 
 What stands out here is the diabetes dataset, which has a high number
 of classes, where skl use much more memory than trafo.
