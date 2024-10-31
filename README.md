@@ -140,10 +140,11 @@ In all cases the input data is correctly classified.
 
 ## A forest with 100 trees
 
-For this test, the following skl settings were changed:
+For this test, skl was run setting:
 ``` python
- 'bootstrap': True,
- 'max_features': 'sqrt',
+clf = RandomForestClassifier(n_estimators=100)
+clf.n_jobs=-1
+clf.min_samples_split=2
 ```
 
 | bin   | dataset       | time (s) | RSS (kb) |
