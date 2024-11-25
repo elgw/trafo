@@ -113,10 +113,8 @@ clf.max_features=X.shape[1]
 clf.min_samples_split=2
 ```
 
-giving these settings:
-
 <details>
-<summar>scikit-learn, full settings</summary>
+<summary>detailed scikit-learn settings</summary>
 
 ``` Python
 {
