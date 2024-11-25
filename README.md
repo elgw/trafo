@@ -1,15 +1,15 @@
-**trafo** (version 0.1.0) is a tiny [random
-forest](https://en.wikipedia.org/wiki/Random_forest)ish library. Most
-likely this isn't what you are looking fore, but free to copy/fork/use
-or have fun finding bugs.
+**trafo** (version 0.1.1, [CHANGELOG](CHANGELOG.md)) is a tiny [random
+forest](https://en.wikipedia.org/wiki/Random_forest) library written
+in C11. Most likely this isn't what you are looking fore, but free to
+copy/fork/use or have fun finding bugs.
 
 Features and Limitations
 
-- Tiny: Less than 3 kSLOC. The compiled library, `libtrafo.so` is < 50K.
+- Tiny: The compiled library, `libtrafo.so` is < 50K.
 - Trees are trained in parallel using OpenMP.
 - Features are only sorted once. Book keeping maintains this property
  throughout the tree constructions.
-- Nodes are split by Gini impurity as the only option.
+- Nodes are split by Gini impurity or by Entropy.
 - Supports integer labels and floating point features.
 - Does not impute missing features.
 - Very little functionality besides the basics. See the `trafo_cli.c`
@@ -23,22 +23,34 @@ Features and Limitations
 - Internally, features are floats with double precision and labels are
   uint32. In 99% of all application it would probably be better with
   the combination of single precision and uint16. That is on the todo list.
-- Only smoke tested and no support offered.
+- Only smoke tested ...
 
 ## Basic Library Usage
+
+Load a classifier and apply it to some data
+
+``` C
+#include <trafo.h>
+
+trafo * T = trafo_load("classifier.trafo");
+uint32_t * class = trafo_predict(T, features, NULL, n_features);
+trafo_free(T);
+```
+
 
 Train a classifier on labelled data and save it to disk:
 
 ``` C
 #include <trafo.h>
 
-// Basic configuration: Describe the data
+// Basic configuration via a struct.
 trafo_conf C = {0};
+// Required: Describe the data
 C.n_sample = n_sample;
 C.n_feature = n_feature;
 C.F_row_major = F;       // Input: Features
 C.label = L;             // Input: Labels
-// Algorithic settings:
+// Optional: Algorithm settings
 C.n_tree = n_tree;
 // .. and possibly more.
 
@@ -53,15 +65,6 @@ trafo_save(T, "classifier.trafo");
 trafo_free(T); // And done
 ```
 
-Load a classifier and apply it to some data
-
-``` C
-#include <trafo.h>
-
-trafo * T = trafo_load("classifier.trafo");
-uint32_t * class = trafo_predict(T, features, NULL, n_features);
-trafo_free(T);
-```
 
 see `trafo.h` for the full API. For more examples, look in `trafo_cli.c`.
 
@@ -71,13 +74,11 @@ Benchmarks should, among other things, provide averages over multiple
 runs. There are only results from single runs reported here. Test
 system: 4-core AMD Ryzen 3 PRO 3300U.
 
-The random forest inplementation in scikit-learn is denoted skl in the
-tables below. The memory usage metric are not directly comparable since
-the values for **trafo** includes the whole cli interface.  For skl it
-is just the delta value, i.e. difference in RSS memory before and
-after the call to the `.fit` method.
-
-This is measured with a procedure like this:
+The random forest implementation in scikit-learn is denoted skl in the
+tables. The memory usage metric are not directly comparable since the
+values for **trafo** includes the whole cli interface.  For skl it is
+just the delta value, i.e. difference in RSS memory before and after
+the call to the `.fit` method, measured with a procedure like this:
 
 ``` python
 mem0 = get_peak_memory()
@@ -207,8 +208,10 @@ Then just add `-ltrafo` to the linker flags of your project.
 - [ ] Feature importance estimation.
 - [ ] Single precision features/uint16 labels option for reduced
       memory usage.
+- [ ] Proper benchmarks, also with Entropy as partitioning criterion.
 
-## See also
+## See also / Alternatives
+
 - Python:
   [scikit-learn](https://scikit-learn.org/1.5/modules/generated/sklearn.ensemble.RandomForestClassifier.html).
 - R: [randomForest](https://cran.r-project.org/web/packages/randomForest/index.html)

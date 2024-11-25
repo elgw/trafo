@@ -26,7 +26,7 @@ endif
 ifeq ($(SAN),0)
 ifeq ($(FANALYZER),0)
 ifeq ($(DEBUG), 1)
-	CFLAGS+=-D_FORTIFY_SOURCE -O
+	CFLAGS+=-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE -O
 endif
 endif
 endif
@@ -43,6 +43,6 @@ endif
 FILES=qsort.c prf_util.c prf_forest.c test.c prf_tree.c
 HEADERS=$(wildcard *.h)
 
-TRAFO_SRC = trafo_cli.c trafo.c sortbox.c qsort.c trafo_util.c ftab.c
+TRAFO_SRC = trafo_cli.c trafo.c sortbox.c qsort.c trafo_util.c ftab.c gini.c entropy.c
 trafo_cli: $(TRAFO_SRC)
 	$(CC) $(CFLAGS) $(TRAFO_SRC) $(LDFLAGS) -o trafo_cli

@@ -25,7 +25,14 @@ set(TRAFO_PUBLIC_HEADERS
 )
 
 add_executable(trafo_cli
-  src/qsort.c src/trafo.c src/trafo_cli.c src/trafo_util.c src/ftab.c src/sortbox.c)
+  src/qsort.c
+  src/trafo.c
+  src/trafo_cli.c
+  src/trafo_util.c
+  src/ftab.c
+  src/entropy.c
+  src/gini.c
+  src/sortbox.c)
 
 target_link_libraries(trafo_cli
   trafo)

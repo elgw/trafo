@@ -2,10 +2,18 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+
+typedef uint8_t u8;
+typedef uint32_t u32;
+typedef float f32;
+typedef double f64;
+typedef int32_t i32;
+
 
 double
 timespec_diff(struct timespec* end, struct timespec * start);

@@ -4,7 +4,7 @@
 
 #define TRAFO_VERSION_MAJOR 0
 #define TRAFO_VERSION_MINOR 1
-#define TRAFO_VERSION_PATCH 0
+#define TRAFO_VERSION_PATCH 1
 
 
 /* These are the configuration options for the Random Forest
@@ -63,6 +63,7 @@ typedef struct {
      */
     uint32_t tree_n_feature;
     uint32_t verbose;
+    int criterion; // 0 = gini, 1 = entropy
 
 } trafo_settings;
 
