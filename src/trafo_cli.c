@@ -73,10 +73,15 @@ void compare_results(const u32 * R,
     return;
 }
 
-void test_iris_tree(void)
+void test_iris_tree(int criterion)
 {
     /* IRIS dataset -- builtin */
-    print_section("IRIS -- single tree");
+    if(criterion == 0)
+    {
+        print_section("IRIS -- single tree -- Gini Impurity");
+    } else {
+        print_section("IRIS -- single tree -- Entropy");
+    }
     trafo_settings conf = {0};
     conf.F_col_major = iris_F;
     conf.label = iris_L;
@@ -87,6 +92,8 @@ void test_iris_tree(void)
     conf.tree_n_feature = iris_nf;
     conf.min_samples_leaf = 1;
     conf.verbose = 1;
+    conf.criterion = criterion;
+
 
 
     trf * F = trafo_fit(&conf);
@@ -133,9 +140,15 @@ void test_iris_tree(void)
     return;
 }
 
-void test_iris_forest(void)
+void test_iris_forest(int criterion)
 {
-    print_section("IRIS -- Forest");
+    if(criterion == 0)
+    {
+        print_section("IRIS -- Forest -- Gini Impurity");
+    } else {
+        print_section("IRIS -- Forest -- Entropy");
+    }
+
     /* IRIS dataset -- builtin */
     trafo_settings conf = {0};
     conf.F_col_major = iris_F;
@@ -194,7 +207,7 @@ typedef struct {
     float tree_f_sample;
     u32 tree_features;
     u32 verbose;
-
+    int entropy;
 } trafo_cli_settings;
 
 void trafo_cli_settings_free(trafo_cli_settings * s)
@@ -234,6 +247,8 @@ static void usage(void)
            "How small a node be before it is automatically turned into a leaf\n");
     printf("--verbose n\n\t"
            "Set verbosity level\n");
+    printf("--entropy\n\t"
+           "Split on entropy instead of Gini impurity\n");
     printf("\n");
     printf("Example: 10-fold cross validation\n");
     printf("rafo --xfold 10 --train file.csv");
@@ -253,6 +268,7 @@ trafo_cli_settings * parse_cli(int argc, char ** argv)
         {"train",   required_argument, NULL, 'c'},
         {"model", required_argument, NULL, 'm'},
         {"classcol", required_argument, NULL, 'n'},
+        {"entropy", no_argument, NULL, 'e'},
         {"cout", required_argument, NULL, 'w'},
         {"ntree", required_argument, NULL, 't'},
         {"predict", required_argument, NULL, 'p'},
@@ -265,13 +281,16 @@ trafo_cli_settings * parse_cli(int argc, char ** argv)
 
     int ch;
     while((ch = getopt_long(argc, argv,
-                            "cflmnpstvwx:",
+                            "ceflmnpstvwx:",
                             longopts, NULL)) != -1)
     {
         switch(ch){
         case 'c':
             free(conf->file_train);
             conf->file_train = strdup(optarg);
+            break;
+        case 'e':
+            conf->entropy = 1;
             break;
         case 'f':
             conf->tree_features = atol(optarg);
@@ -544,6 +563,7 @@ void xfold(trafo_cli_settings * conf,
         Tconf.tree_n_feature = conf->tree_features;
         Tconf.tree_f_sample = conf->tree_f_sample;
         Tconf.min_samples_leaf = conf->min_leaf_size;
+        Tconf.criterion = conf->entropy;
 
         /* Train */
         trf * T = trafo_fit(&Tconf);
@@ -660,6 +680,7 @@ void train_file(trafo_cli_settings * conf)
     Tconf.tree_n_feature = conf->tree_features;
     Tconf.tree_f_sample = conf->tree_f_sample;
     Tconf.min_samples_leaf = conf->min_leaf_size;
+    Tconf.criterion = conf->entropy;
 
     if(conf->n_tree == 1)
     {
@@ -717,9 +738,11 @@ int main(int argc, char ** argv)
 
     if(conf->builtin_tests)
     {
-        test_iris_tree();
+        test_iris_tree(0);
+        test_iris_tree(1);
         print_peak_memory();
-        test_iris_forest();
+        test_iris_forest(0);
+        test_iris_forest(1);
         print_peak_memory();
         trafo_ut();
         return EXIT_SUCCESS;

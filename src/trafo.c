@@ -9,15 +9,15 @@
 
 #include <omp.h>
 
+#include "entropy.h"
+#include "gini.h"
 #include "sortbox.h"
 #include "trafo.h"
 #include "trafo_util.h"
 
-typedef uint8_t u8;
-typedef uint32_t u32;
-typedef float f32;
-typedef double f64;
-typedef int32_t i32;
+enum trafo_criterion{
+    gini, entropy
+};
 
 typedef struct  {
     u32 left_node; // below threshold, refering to the index of the node
@@ -37,6 +37,8 @@ typedef struct {
 } ttable;
 
 
+/* For storing the settings, more or less a superset of the CLI
+ * configuration  */
 struct _trf {
     /*
      * Input data
@@ -60,6 +62,9 @@ struct _trf {
 
     u32 max_label; // The maximum label + 1;
 
+    /* What to split by, 0 = gini, 1 = entropy */
+    enum trafo_criterion criterion;
+
     /*
      * Optional settings
      */
@@ -80,113 +85,7 @@ struct _trf {
 };
 
 
-static double
-squaresum(const size_t * V, size_t T, size_t N)
-{
-    double s = 0;
-    for(size_t kk = 0; kk<N; kk++)
-    {
-        s+= pow((double) V[kk]/ (double) T, 2);
-    }
-    return s;
-}
 
-static double
-gini_from_2H(const size_t * HL,
-             const size_t * HR,
-             size_t nclass,
-             const size_t nL,
-             const size_t nR,
-             double * lgini, double * rgini)
-{
-    double gL = 1.0 - squaresum(HL, nL, nclass);
-    double gR = 1.0 - squaresum(HR, nR, nclass);
-    double N = nL + nR;
-    *lgini = gL;
-    *rgini = gR;
-
-    return  (double) nL/N * gL + (double) nR/N * gR;
-}
-
-static double
-gini_split(const u32 * restrict class,
-           const f64 * restrict feature,
-           const u32 npoint,
-           const u32 max_label,
-           u32  * restrict _nleft,
-           u32  * restrict _nright,
-           f64* restrict _gleft,
-           f64* restrict _gright)
-{
-    if(npoint < 2)
-    {
-        return 0;
-    }
-    size_t HL[max_label + 1];
-    size_t HR[max_label + 1];
-
-    memset(HL, 0, (max_label+1)*sizeof(size_t));
-    memset(HR, 0, (max_label+1)*sizeof(size_t));
-
-    assert(HL[0] == 0);
-    /* Initially the "right" histogram contain all points */
-    for(size_t kk = 0; kk < npoint; kk++)
-    {
-        assert(class[kk] <= max_label);
-        HR[class[kk]]++;
-    }
-
-    double best_lgini, best_rgini;
-    double mingini = gini_from_2H(HR, HR, max_label,
-                                  npoint, npoint,
-                                  &best_lgini, &best_rgini);
-
-    u32 best_nleft = 0;
-
-    for(size_t kk = 1; kk < npoint; kk++)
-    {
-        HL[class[kk-1]]++;
-        HR[class[kk-1]]--;
-
-        if(feature[kk-1] == feature[kk])
-        {
-            /* There is no threshold that splits the data with kk
-               points to the left. */
-            continue;
-        }
-        double lgini, rgini;
-        double g = gini_from_2H(HL, HR, max_label,
-                                kk, npoint-kk,
-                                &lgini, &rgini);
-        if(g < 0)
-        {
-            printf("g = %f (%f, %f)\n", g, lgini, rgini);
-            printf("left: %zu, right: %zu\n", kk, npoint-kk);
-            for(size_t ll = 0; ll <= max_label; ll++)
-            {
-                printf("%zu, %zu\n", HL[ll], HR[ll]);
-            }
-        }
-        assert(g>=0);
-
-        if(g < mingini)
-        {
-            best_nleft = kk;
-            mingini = g;
-            best_lgini = lgini;
-            best_rgini = rgini;
-        }
-    }
-
-    /* Note: The case when all points are to the left
-       is identical to the case where all points are to the right
-       and not considered */
-    *_gleft = best_lgini;
-    *_gright = best_rgini;
-    *_nleft = best_nleft;
-    *_nright = npoint - best_nleft;
-    return mingini;
-}
 
 /* Transpose the M x N matrix into N x M. M is the size of the first,
  * non-strided dimension */
@@ -288,13 +187,14 @@ recurse_tree(sortbox * B,
              size_t level,
              size_t start,
              size_t npoints,
-             const double node_gini,
+             int criterion,
+             const double node_disorder,
              const size_t tnode_id)
 {
     // printf("Recurse: [%zu, %zu]\n", start, start+npoints-1);
     tnode * node =  &T->nodes[tnode_id];
 
-    if(node_gini == 0 )
+    if(node_disorder == 0 )
     {
         const u32 * cl = sortbox_get_class_array_unsorted(B);
         // tnode_id=95 node->left_node=3930079040
@@ -318,16 +218,19 @@ recurse_tree(sortbox * B,
         //printf("Can't split any more\n");
         const u32 * cl = sortbox_get_class_array_unsorted(B);
         node->left_node = 0;
-        node->right_node = most_commomax_label(cl+start, npoints, sortbox_get_nclass(B));
+        node->right_node =
+            most_commomax_label(cl+start, npoints,
+                                sortbox_get_nclass(B));
         //printf("leaf: minsizes: class:%u\n", node->right_node);
         return;
     }
 
-    int sel_feature = -1;
-    double mingini = 2;
+    int sel_feature = -1; // What feature to use
+    double mindisorder = 1e99; // An upper bound on the disorder
+
     double th = 0;
-    double gini_left = 1;
-    double gini_right = 1;
+    double disorder_left = 1;
+    double disorder_right = 1;
     u32 best_nleft = 0;
 
     for(u32 kk = 0; kk < sortbox_get_nfeature(B); kk++)
@@ -359,29 +262,44 @@ recurse_tree(sortbox * B,
             assert(feature[kk] <= feature[kk+1]);
         }
 
+
         u32 nleft = 0;
         u32 nright;
-        f64 gleft;
-        f64 gright;
-        double gini =
-            gini_split(class, feature,
-                       npoints, sortbox_get_nclass(B),
-                       &nleft, &nright,
-                       &gleft, &gright);
 
-        assert(gini <= 1.0);
-        assert(gini >= 0.0);
+        // if criterion == gini
+        f64 d_left, d_right;
+        double disorder;
+
+        if(criterion == 0)
+        {
+
+            disorder =
+                gini_split(class, feature,
+                           npoints, sortbox_get_nclass(B),
+                           &nleft, &nright,
+                           &d_left, &d_right);
+            assert(disorder <= 1.0);
+        } else {
+            disorder =
+                entropy_split(class, feature,
+                              npoints, sortbox_get_nclass(B),
+                              &nleft, &nright,
+                              &d_left, &d_right);
+        }
+
+        assert(disorder >= 0.0);
+
         if(nleft == 0)
         {
             /* This can happen if there is no threshold that can split
                the data. It is ok. */
         }
 
-        if(gini < mingini && nleft > 0)
+        if(gini < mindisorder && nleft > 0)
         {
             best_nleft = nleft;
             sel_feature = ff;
-            mingini = gini;
+            mindisorder = disorder;
             th = 0.5*(feature[nleft-1] + feature[nleft]);
             /* Note: - The data is split without regards to ties. It
              * does not know if there is a treshold that supports the
@@ -392,14 +310,15 @@ recurse_tree(sortbox * B,
              * feature[nleft-1] == feature[nleft]
              */
 
-            gini_left = gleft;
-            gini_right = gright;
+            disorder_left = d_left;
+            disorder_right = d_right;
             if(0)
             {
                 printf("]\n");
                 printf("sel_feature = %u\n", sel_feature);
                 printf("nleft = %u, nright = %u\n", nleft, nright);
-                printf("gini = %f, gleft=%f, gright=%f\n", gini, gini_left, gini_right);
+                printf("gini = %f, gleft=%f, gright=%f\n", disorder,
+                       disorder_left, disorder_right);
             }
         }
     }
@@ -465,10 +384,14 @@ recurse_tree(sortbox * B,
 
     //printf("Running Left\n");
     recurse_tree(B, T,
-                 minsize, level+1, start, nleft, gini_left, left_id);
+                 minsize, level+1, start, nleft,
+                 criterion,
+                 disorder_left, left_id);
     //printf("Running Right\n");
     recurse_tree(B, T,
-                 minsize, level+1, start+nleft, nright, gini_right, right_id);
+                 minsize, level+1, start+nleft, nright,
+                 criterion,
+                 disorder_right, right_id);
     return;
 }
 
@@ -527,6 +450,19 @@ trafo_print(FILE * fid, const trf * s)
     fprintf(fid, "Features per tree: %u\n", s->tree_n_feature);
     fprintf(fid, "min_samples_leaf: %u\n", s->min_samples_leaf);
     fprintf(fid, "Largest label id: %u\n", s->max_label);
+    fprintf(fid, "Splitting criterion: ");
+    switch (s->criterion)
+    {
+    case gini:
+        fprintf(fid, "Gini Impurity\n");
+        break;
+    case entropy:
+        fprintf(fid, "Entropy\n");
+        break;
+    default:
+        fprintf(fid, "INVALID!\n");
+        break;
+    }
     return;
 }
 
@@ -573,6 +509,13 @@ trafo_check(trf * s)
     {
         printf("Error: Invalid samples per tree fraction\n");
     }
+    if(s->criterion > 1 || s->criterion < 0)
+    {
+        printf("Error: Invalid criterion, valid choices are 0=gini, 1=entropy\n"
+               "       Criterion set to gini\n");
+
+        s->criterion = 0;
+    }
     return 0;
 }
 
@@ -583,9 +526,9 @@ trafo_check(trf * s)
 
 u32 *
 trafo_predict(trf * s,
-            const f64 * X_cm,
-            const f64 * X_rm,
-            size_t n_point)
+              const f64 * X_cm,
+              const f64 * X_rm,
+              size_t n_point)
 {
     if( (X_rm == NULL) & (X_cm == NULL) )
     {
@@ -665,6 +608,7 @@ trf *  trafo_fit(trafo_settings * conf)
     s->tree_f_sample = conf->tree_f_sample;
     s->verbose = conf->verbose;
     s->min_samples_leaf = conf->min_samples_leaf;
+    s->criterion = conf->criterion;
 
     if(trafo_check(s))
     {
@@ -729,7 +673,6 @@ trf *  trafo_fit(trafo_settings * conf)
     }
 
 
-
 #pragma omp parallel for
     for(size_t tt = 0; tt < s->n_tree; tt++)
     {
@@ -751,12 +694,14 @@ trf *  trafo_fit(trafo_settings * conf)
                      0, // level
                      0, // start index
                      tree_n_sample, // number of selected samples
-                     1.0, // node_gini (does not matter for the root)
+                     s->criterion,
+                     1.0, // node_disorder (does not matter for the root)
                      0); // node_id
 
         ttab[tt].nnode++;
         sortbox_free(BC);
     }
+
 
     sortbox_free(B);
     clock_gettime(CLOCK_REALTIME, &tictoc_end);
@@ -872,7 +817,7 @@ static int ttable_from_file(ttable * T, FILE * fid)
 }
 
 int trafo_save(trf * F,
-             const char * filename)
+               const char * filename)
 {
     FILE * fid = fopen(filename, "w");
     if(fid == NULL)
@@ -905,10 +850,10 @@ int trafo_save(trf * F,
 
     return 0;
 
- fail1:
+fail1:
     fclose(fid);
 
- fail2:
+fail2:
     printf("Error opening %s for writing\n", filename);
     return -1;
 }

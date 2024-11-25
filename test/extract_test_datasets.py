@@ -3,12 +3,22 @@ import numpy as np
 from sklearn.datasets import *
 
 # https://stackoverflow.com/questions/43640546/how-to-make-randomforestclassifier-faster
-datasets = ['iris', 'digits', 'wine', 'breast_cancer','diabetes', 'rand']
+datasets = ['iris', 'digits', 'wine', 'breast_cancer','diabetes', 'rand6', 'rand7']
 
 for name in datasets:
     print("Processing " + name)
-    if name == 'rand':
+    if name == 'rand6':
         ns = 100000
+        nf = 100
+        header = []
+        for kk in range(0, nf):
+            header.append(f'f{kk}')
+        header.append('class')
+        data = np.random.rand(ns, nf)
+        target = np.random.randint(low=0, high=2, size=(ns, 1))
+        data_array = np.concatenate((data, target), axis=1)
+    elif name == 'rand7':
+        ns = 1000000
         nf = 100
         header = []
         for kk in range(0, nf):
