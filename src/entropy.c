@@ -2,12 +2,16 @@
 #include <math.h>
 
 
-
-
-/* Return log2(n!) using Stirlings formula */
+/* Return log2(n!) using Stirlings formula
+ * see https://doi.org/10.21468/SciPostPhysLectNotes.76
+ */
 static double log_p(double n)
 {
-    return n*log(n) - n;
+    if(n == 1)
+    {
+        return 0;
+    }
+    return n*log(n) - n + log(sqrt(2.0*M_PI*n));
 }
 
 /* Entropy calculated as ln( n! / \prod n_i! ) where n_i is the number
