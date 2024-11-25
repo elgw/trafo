@@ -729,7 +729,6 @@ trf *  trafo_fit(trafo_settings * conf)
     }
 
 
-
 #pragma omp parallel for
     for(size_t tt = 0; tt < s->n_tree; tt++)
     {
@@ -757,6 +756,7 @@ trf *  trafo_fit(trafo_settings * conf)
         ttab[tt].nnode++;
         sortbox_free(BC);
     }
+
 
     sortbox_free(B);
     clock_gettime(CLOCK_REALTIME, &tictoc_end);

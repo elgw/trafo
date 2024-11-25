@@ -32,13 +32,15 @@ Train a classifier on labelled data and save it to disk:
 ``` C
 #include <trafo.h>
 
-// Basic configuration
+// Basic configuration: Describe the data
 trafo_conf C = {0};
 C.n_sample = n_sample;
 C.n_feature = n_feature;
 C.F_row_major = F;       // Input: Features
 C.label = L;             // Input: Labels
-C.n_tree = conf->n_tree;
+// Algorithic settings:
+C.n_tree = n_tree;
+// .. and possibly more.
 
 // Fitting / Training
 trafo * T = trafo_fit(C);
@@ -113,9 +115,34 @@ clf.min_samples_split=2
 
 giving these settings:
 
+<details>
+<summar>scikit-learn, full settings</summary>
+
 ``` Python
-{'bootstrap': False, 'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'gini', 'max_depth': None, 'max_features': 10, 'max_leaf_nodes': None, 'max_samples': None, 'min_impurity_decrease': 0.0, 'min_samples_leaf': 1, 'min_samples_split': 2, 'min_weight_fraction_leaf': 0.0, 'monotonic_cst': None, 'n_estimators': 1, 'n_jobs': -1, 'oob_score': False, 'random_state': None, 'verbose': 0, 'warm_start': False}
+{
+    'bootstrap': False,
+    'ccp_alpha': 0.0,
+    'class_weight': None,
+    'criterion': 'gini',
+    'max_depth': None,
+    'max_features': 10,
+    'max_leaf_nodes': None,
+    'max_samples': None,
+    'min_impurity_decrease': 0.0,
+    'min_samples_leaf': 1,
+    'min_samples_split': 2,
+    'min_weight_fraction_leaf': 0.0,
+    'monotonic_cst': None,
+    'n_estimators': 1,
+    'n_jobs': -1,
+    'oob_score': False,
+    'random_state': None,
+    'verbose': 0,
+    'warm_start': False
+    }
 ```
+
+</details>
 
 Results for tree construction:
 
