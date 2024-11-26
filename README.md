@@ -1,6 +1,6 @@
-**trafo** (version 0.1.1, [CHANGELOG](CHANGELOG.md)) is a tiny [random
+**trafo** (version 0.1.2, [CHANGELOG](CHANGELOG.md)) is a tiny [random
 forest](https://en.wikipedia.org/wiki/Random_forest) library written
-in C11. Most likely this isn't what you are looking fore, but free to
+in C11. Most likely this isn't what you are looking for, but feel free to
 copy/fork/use or have fun finding bugs.
 
 Features and Limitations
