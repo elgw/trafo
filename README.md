@@ -6,23 +6,33 @@ copy/fork/use or have fun finding bugs.
 Features and Limitations
 
 - Tiny: The compiled library, `libtrafo.so` is < 50K.
+
 - Trees are trained in parallel using OpenMP.
+
 - Features are only sorted once. Book keeping maintains this property
  throughout the tree constructions.
+
 - Nodes are split by Gini impurity or by Entropy.
+
 - Supports integer labels and floating point features.
+
 - Does not impute missing features.
+
 - Very little functionality besides the basics. See the `trafo_cli.c`
   for one way to add k-fold cross validation on top of the library. It
   should be very simple implement the feature permutation method to
   estimate feature importance on top of this library as well.
+
 - The command line interface `trafo_cli` can be used to test the
   library on tsv-formated data. The tsv parser is very limited.
+
 - Paramerers include: - The number of trees. - Fraction of samples per
   tree. - Number of features per tree.
+
 - Internally, features are floats with double precision and labels are
   uint32. In 99% of all application it would probably be better with
   the combination of single precision and uint16. That is on the todo list.
+
 - Only smoke tested ...
 
 ## Basic Library Usage
@@ -206,9 +216,14 @@ Then just add `-ltrafo` to the linker flags of your project.
 
 ## To do
 - [ ] Feature importance estimation.
+
 - [ ] Single precision features/uint16 labels option for reduced
       memory usage.
+
 - [ ] Proper benchmarks, also with Entropy as partitioning criterion.
+
+- [ ] Tell something about the precision / predictive powers of this
+      library vs other implementation.
 
 ## See also / Alternatives
 
