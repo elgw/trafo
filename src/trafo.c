@@ -233,6 +233,9 @@ recurse_tree(sortbox * B,
     double disorder_right = 1;
     u32 best_nleft = 0;
 
+    // TODO: In some cases we want to keep all the features but sample a fraction
+    // of them at each split. Here we are cheating -- subsampling features at the start ...
+
     for(u32 kk = 0; kk < sortbox_get_nfeature(B); kk++)
     {
         int ff = rand() % sortbox_get_nfeature(B);
@@ -819,6 +822,7 @@ static int ttable_from_file(ttable * T, FILE * fid)
 int trafo_save(trf * F,
                const char * filename)
 {
+    assert(F != NULL);
     FILE * fid = fopen(filename, "w");
     if(fid == NULL)
     { goto fail2; }
@@ -828,7 +832,7 @@ int trafo_save(trf * F,
     if(nwritten != 1)
     { goto fail1; }
 
-    nwritten = fwrite(&F->n_tree, sizeof(u32), 1, fid);
+    nwritten = fwrite(&(F->n_tree), sizeof(u32), 1, fid);
     if(nwritten != 1)
     { goto fail1; }
 

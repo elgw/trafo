@@ -4,7 +4,7 @@
 
 #define TRAFO_VERSION_MAJOR 0
 #define TRAFO_VERSION_MINOR 1
-#define TRAFO_VERSION_PATCH 1
+#define TRAFO_VERSION_PATCH 2
 
 
 /* These are the configuration options for the Random Forest

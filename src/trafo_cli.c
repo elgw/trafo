@@ -200,6 +200,7 @@ typedef struct {
     char * classifier_out;
     char * classifier_in;
     char * classcol;
+    int classcol_id;
     u32 n_tree;
     u32 xfold;
     int builtin_tests;
@@ -222,6 +223,19 @@ void trafo_cli_settings_free(trafo_cli_settings * s)
     free(s->classifier_in);
     free(s->classcol);
     free(s);
+}
+
+static void
+trafo_cli_settings_show(trafo_cli_settings * s)
+{
+    printf("OMP_NUM_THREADS: %s\n", getenv("OMP_NUM_THREADS"));
+    printf("file_train: %s\n", s->file_train);
+    printf("file_predict: %s\n", s->file_predict);
+    printf("classifier_out: %s\n", s->classifier_out);
+    printf("classifier_in: %s\n", s->classifier_in);
+    printf("classcol: %s\n", s->classcol);
+    printf("n_tree=%u\n", s->n_tree);
+    return;
 }
 
 static void usage(void)
@@ -249,9 +263,11 @@ static void usage(void)
            "Set verbosity level\n");
     printf("--entropy\n\t"
            "Split on entropy instead of Gini impurity\n");
+    printf("--xfold n\n\t"
+           "Perform n-fold cross validataion\n");
     printf("\n");
     printf("Example: 10-fold cross validation\n");
-    printf("rafo --xfold 10 --train file.csv");
+    printf("$ trafo --xfold 10 --train file.csv\n");
     return;
 }
 
@@ -261,27 +277,29 @@ trafo_cli_settings * parse_cli(int argc, char ** argv)
     assert(conf != NULL);
 
     conf->classcol = strdup("class");
+    conf->classcol_id = -1;
     conf->verbose = 1;
     conf->n_tree  = 1;
 
     struct option longopts[] = {
-        {"train",   required_argument, NULL, 'c'},
-        {"model", required_argument, NULL, 'm'},
-        {"classcol", required_argument, NULL, 'n'},
-        {"entropy", no_argument, NULL, 'e'},
-        {"cout", required_argument, NULL, 'w'},
-        {"ntree", required_argument, NULL, 't'},
-        {"predict", required_argument, NULL, 'p'},
-        {"tree_samples", required_argument, NULL, 's'},
+        {"train",         required_argument, NULL, 'c'},
+        {"model",         required_argument, NULL, 'm'},
+        {"classcol",      required_argument, NULL, 'n'},
+        {"classcolID",    required_argument, NULL, 'i'},
+        {"entropy",       no_argument,       NULL, 'e'},
+        {"cout",          required_argument, NULL, 'w'},
+        {"ntree",         required_argument, NULL, 't'},
+        {"predict",       required_argument, NULL, 'p'},
+        {"tree_samples",  required_argument, NULL, 's'},
         {"tree_features", required_argument, NULL, 'f'},
         {"min_leaf_size", required_argument, NULL, 'l'},
-        {"verbose", required_argument, NULL, 'v'},
-        {"xfold", required_argument, NULL, 'x'},
+        {"verbose",       required_argument, NULL, 'v'},
+        {"xfold",         required_argument, NULL, 'x'},
         {NULL, 0, NULL, 0}};
 
     int ch;
     while((ch = getopt_long(argc, argv,
-                            "ceflmnpstvwx:",
+                            "c:ef:i:l:m:n:p:s:t:v:w:x:",
                             longopts, NULL)) != -1)
     {
         switch(ch){
@@ -294,6 +312,9 @@ trafo_cli_settings * parse_cli(int argc, char ** argv)
             break;
         case 'f':
             conf->tree_features = atol(optarg);
+            break;
+        case 'i':
+            conf->classcol_id = atol(optarg);
             break;
         case 'l':
             conf->min_leaf_size = atol(optarg);
@@ -373,7 +394,11 @@ void predict_file(trafo_cli_settings * conf)
 
     u32 n_feature = tab->ncol;
 
-    int c_col = ftab_get_col(tab, conf->classcol);
+    int c_col = conf->classcol_id;
+    if(c_col < 0)
+    {
+        c_col = ftab_get_col(tab, conf->classcol);
+    }
     if(c_col < 0)
     {
         printf("Unable to find any column with the name \"%s\"\n",
@@ -423,16 +448,45 @@ void predict_file(trafo_cli_settings * conf)
         printf("No ground truth to compare with\n");
     } else {
         u32 neq = 0;
+        int max_label = 0;
         for(size_t kk = 0; kk < n_sample; kk++)
         {
+            (int) L[kk] > max_label ? max_label = L[kk] : 0 ;
+            (int) P[kk] > max_label ? max_label = P[kk] : 0 ;
             if(P[kk] == L[kk])
             {
                 neq++;
             }
         }
-        printf("%u / %u predicted correctly\n", neq, n_sample);
+        printf("%u / %u predicted correctly (%.2f %%)\n", neq, n_sample,
+               100.0 * (double) neq / (double) n_sample);
+
+        /* Construct a confusion matrix and display it */
+        max_label++;
+        u32 * CM = calloc((size_t )max_label* (size_t) max_label, sizeof(u32));
+        assert(CM != NULL);
+        for(size_t kk = 0; kk < n_sample ; kk++)
+        {
+            CM[L[kk] + max_label*P[kk]]++;
+        }
+
+        printf("\n");
+        for(int kk = 0; kk < max_label; kk++)
+        {
+            for(int ll = 0; ll < max_label; ll++)
+            {
+                printf("%4d ", CM[kk+max_label*ll]);
+            }
+            printf("\n");
+        }
+        printf("\n");
+
+        free(CM);
     }
 
+
+
+    free(P);
     free(L);
     free(F);
 
@@ -616,7 +670,11 @@ void train_file(trafo_cli_settings * conf)
 
     u32 n_feature = tab->ncol;
 
-    int c_col = ftab_get_col(tab, conf->classcol);
+    int c_col = conf->classcol_id;
+    if(c_col < 0)
+    {
+        c_col = ftab_get_col(tab, conf->classcol);
+    }
     if(c_col < 0)
     {
         printf("Unable to find any column with the name \"%s\"\n"
@@ -701,6 +759,11 @@ void train_file(trafo_cli_settings * conf)
     struct timespec t0, t1;
     clock_gettime(CLOCK_REALTIME, &t0);
     trf * T = trafo_fit(&Tconf);
+    if(T == NULL)
+    {
+        fprintf(stderr, "Fatal error: trf_fit returned NULL\n");
+        exit(EXIT_FAILURE);
+    }
     clock_gettime(CLOCK_REALTIME, &t1);
     printf("trafo: Forest training took %.4f s\n",
            timespec_diff(&t1, &t0));
@@ -733,7 +796,7 @@ int main(int argc, char ** argv)
     }
     if(conf->verbose > 1)
     {
-        printf("OMP_NUM_THREADS: %s\n", getenv("OMP_NUM_THREADS"));
+        trafo_cli_settings_show(conf);
     }
 
     if(conf->builtin_tests)
