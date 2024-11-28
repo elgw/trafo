@@ -1,16 +1,22 @@
 #include <math.h>
-
 #include "gini.h"
 
-
+/* Calculates
+ *
+ * $$ \sum \left( \frac{V_i}{T} \right)^2 $$
+ *
+ * Here it is assumed that $$\sum V_i == T$$
+ */
 static double
 squaresum(const size_t * V, size_t T, size_t N)
 {
     double s = 0;
     for(size_t kk = 0; kk<N; kk++)
     {
+        assert( V[kk] <= T );
         s+= pow((double) V[kk]/ (double) T, 2);
     }
+    assert(s <= 1);
     return s;
 }
 
@@ -42,7 +48,7 @@ gini_split(const u32 * restrict class,
            f64* restrict _gleft,
            f64* restrict _gright)
 {
-    if(npoint < 2)
+    if(npoint  < 2)
     {
         return 0;
     }
