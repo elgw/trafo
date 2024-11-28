@@ -244,7 +244,7 @@ static void usage(void)
     printf("--train file.tsv\n\t"
            "table to train on\n");
     printf("--cout file.trf\n\t"
-        "Write the classifier to disk\n");
+           "Write the classifier to disk\n");
     printf("--ntree n\n\t"
            "number of trees in the forest\n");
     printf("--predict file.tsv\n\t"
@@ -462,28 +462,31 @@ void predict_file(trafo_cli_settings * conf)
                100.0 * (double) neq / (double) n_sample);
 
         /* Construct a confusion matrix and display it */
-        max_label++;
-        u32 * CM = calloc((size_t )max_label* (size_t) max_label, sizeof(u32));
-        assert(CM != NULL);
-        for(size_t kk = 0; kk < n_sample ; kk++)
-        {
-            CM[L[kk] + max_label*P[kk]]++;
-        }
 
-        printf("\n");
-        for(int kk = 0; kk < max_label; kk++)
+        if(max_label < 10)
         {
-            for(int ll = 0; ll < max_label; ll++)
+            max_label++;
+            u32 * CM = calloc((size_t )max_label* (size_t) max_label, sizeof(u32));
+            assert(CM != NULL);
+            for(size_t kk = 0; kk < n_sample ; kk++)
             {
-                printf("%4d ", CM[kk+max_label*ll]);
+                CM[L[kk] + max_label*P[kk]]++;
+            }
+
+            printf("\n");
+            for(int kk = 0; kk < max_label; kk++)
+            {
+                for(int ll = 0; ll < max_label; ll++)
+                {
+                    printf("%4d ", CM[kk+max_label*ll]);
+                }
+                printf("\n");
             }
             printf("\n");
+
+            free(CM);
         }
-        printf("\n");
-
-        free(CM);
     }
-
 
 
     free(P);
@@ -498,10 +501,10 @@ void predict_file(trafo_cli_settings * conf)
 
 void
 subselect_features(u32 * S, u32 id,
-                        const double * F,
-                        u32 n_sample, u32 n_feature,
-                        double * Ftrain, u32 * nFtrain,
-                        double * Feval, u32 *nFeval)
+                   const double * F,
+                   u32 n_sample, u32 n_feature,
+                   double * Ftrain, u32 * nFtrain,
+                   double * Feval, u32 *nFeval)
 {
     u32 n_train = 0;
     u32 n_pred = 0;
@@ -526,10 +529,10 @@ subselect_features(u32 * S, u32 id,
 
 void
 subselect_labels(u32 * S, u32 id,
-                   const u32 * L,
-                   u32 n_sample,
-                   u32 * Ltrain, u32 * nLtrain,
-                   u32 * Leval, u32 *nLeval)
+                 const u32 * L,
+                 u32 n_sample,
+                 u32 * Ltrain, u32 * nLtrain,
+                 u32 * Leval, u32 *nLeval)
 {
     u32 n_train = 0;
     u32 n_pred = 0;
@@ -603,8 +606,8 @@ void xfold(trafo_cli_settings * conf,
                          Leval, &nLeval);
         if(conf->verbose > 1)
         {
-        printf("Using %u for training and %u for testing\n",
-               nLtrain, nLeval);
+            printf("Using %u for training and %u for testing\n",
+                   nLtrain, nLeval);
         }
 
         trafo_settings Tconf = {0};

@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.datasets import *
 
 # https://stackoverflow.com/questions/43640546/how-to-make-randomforestclassifier-faster
-datasets = ['iris', 'digits', 'wine', 'breast_cancer','diabetes', 'rand6', 'rand7']
+datasets = ['iris', 'digits', 'wine', 'breast_cancer','diabetes', 'rand5', 'rand6', 'rand7']
 
 for name in datasets:
     print("Processing " + name)
