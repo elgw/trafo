@@ -387,9 +387,19 @@ void predict_file(trafo_cli_settings * conf)
 {
     printf("Reading model from %s\n", conf->classifier_in);
     trf * T = trafo_load(conf->classifier_in);
+    if(T == NULL)
+    {
+        fprintf(stderr, "Unable to load model\n");
+        exit(EXIT_FAILURE);
+    }
 
     printf("Reading data from %s\n", conf->file_predict);
     ftab_t * tab = ftab_from_dlm(conf->file_predict);
+    if(tab == NULL)
+    {
+        fprintf(stderr, "Unable to load dataset\n");
+        exit(EXIT_FAILURE);
+    }
     printf("ncol: %zu, nrow: %zu\n", tab->ncol, tab->nrow);
 
     u32 n_feature = tab->ncol;
