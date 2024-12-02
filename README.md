@@ -370,7 +370,6 @@ $ trafo --xfold 10 --train file.csv
 </details>
 
 ## To do
-- [ ] Feature importance estimation.
 
 - [ ] Single precision features/uint16 labels option for reduced
       memory usage.
