@@ -258,9 +258,8 @@ $ trafo --xfold 10 --train file.csv
 ```
 </details>
 
-Just one more example, if you want:
 
-<details> <summary>Example output -- built in tests</summary>
+<details> <summary>Example output -- training on wine.tsv</summary>
 
 ```
 $ trafo_cli --version
