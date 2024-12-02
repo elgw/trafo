@@ -224,7 +224,7 @@ will perform some tests when called without any arguments.
 
 <details> <summary>Example output -- built in tests</summary>
 
-``` shell
+```
 $ trafo_cli --version
 trafo_cli version 0.1.3
 $ trafo_cli
@@ -335,7 +335,7 @@ VmPeak: 716764 (kb) VmHWM: 1276 (kb)
 
 <details> <summary>Example output -- command line arguments</summary>
 
-``` shell
+```
 $ trafo_cli --help
 Usage:
 --train file.tsv
