@@ -1,4 +1,4 @@
-**trafo** (version 0.1.2, [CHANGELOG](CHANGELOG.md)) is a tiny [random
+**trafo** (version 0.1.3, [CHANGELOG](CHANGELOG.md)) is a tiny [random
 forest](https://en.wikipedia.org/wiki/Random_forest) library written
 in C11. Most likely this isn't what you are looking for, but feel free to
 copy/fork/use or have fun finding bugs.
@@ -15,17 +15,19 @@ Features and Limitations
 
 - Gini impurity or by Entropy can be used as the splitting criterion for nodes.
 
+- Feature importance: approximations included at almost no extra
+  cost. The more proper (?) feature permutation is simple to add on
+  top of the library -- if needed.
+
 - Command line interface: the binary `trafo_cli` can be used to test the
-  library on tsv-formated data. The tsv parser is very limited.
+  library on tsv/csv-formated data although the parser is very basic.
 
 - Supports integer labels and floating point features.
 
 - Does not impute missing features.
 
 - Very little functionality besides the basics. See the `trafo_cli.c`
-  for one way to add k-fold cross validation on top of the library. It
-  should be very simple implement the feature permutation method to
-  estimate feature importance on top of this library as well.
+  for one way to add k-fold cross validation on top of the library.
 
 - Paramerers include: - The number of trees. - Fraction of samples per
   tree. - Number of features per tree.
@@ -75,7 +77,6 @@ trafo_save(T, "classifier.trafo");
 
 trafo_free(T); // And done
 ```
-
 
 see `trafo.h` for the full API. For more examples, look in `trafo_cli.c`.
 
@@ -214,6 +215,159 @@ sudo make install
 ```
 
 Then just add `-ltrafo` to the linker flags of your project.
+
+## Example output
+
+The command line program `trafo_cli` has the iris dataset built in and
+will perform some tests when called without any arguments.
+
+
+<details> <summary>Example output -- built in tests</summary>
+
+``` shell
+$ trafo_cli --version
+trafo_cli version 0.1.3
+$ trafo_cli
+╭──────────────────────────────────────────────────────────────────────────────╮
+│                    IRIS -- single tree -- Gini Impurity                      │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+Features provided in column major format
+Label array provided
+Number of features: 4
+Number of samples: 150
+Number of trees: 1
+Fraction of samples per tree: 1.00
+Features per tree: 4
+min_samples_leaf: 1
+Largest label id: 2
+Splitting criterion: Gini Impurity
+Classifying using 1 tables/trees
+Prediction took 0.000217 s
+100.00 % correctly classified (150 / 150)
+Feature importance*:
+#  0 : 3.8 %
+#  1 : 3.1 %
+#  2 : 9.0 %
+#  3 : 84.1 %
+
+-> Saving to disk, reading from disk and comparing
+150 / 150 predictions are equal
+╭──────────────────────────────────────────────────────────────────────────────╮
+│                       IRIS -- single tree -- Entropy                         │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+Features provided in column major format
+Label array provided
+Number of features: 4
+Number of samples: 150
+Number of trees: 1
+Fraction of samples per tree: 1.00
+Features per tree: 4
+min_samples_leaf: 1
+Largest label id: 2
+Splitting criterion: Entropy
+Classifying using 1 tables/trees
+Prediction took 0.003085 s
+100.00 % correctly classified (150 / 150)
+Feature importance*:
+#  0 : 13.6 %
+#  1 : 13.1 %
+#  2 : 18.2 %
+#  3 : 55.0 %
+
+-> Saving to disk, reading from disk and comparing
+150 / 150 predictions are equal
+VmPeak: 454620 (kb) VmHWM: 1276 (kb)
+╭──────────────────────────────────────────────────────────────────────────────╮
+│                      IRIS -- Forest -- Gini Impurity                         │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+Features provided in column major format
+Label array provided
+Number of features: 4
+Number of samples: 150
+Number of trees: 20
+Fraction of samples per tree: 0.63
+Features per tree: 2
+min_samples_leaf: 1
+Largest label id: 2
+Splitting criterion: Gini Impurity
+Classifying using 20 tables/trees
+Prediction took 0.000086 s
+99.33 % correctly classified (149 / 150)
+Feature importance*:
+#  0 : 5.0 %
+#  1 : 21.1 %
+#  2 : 38.2 %
+#  3 : 35.8 %
+
+-> Saving to disk, reading from disk and comparing
+150 / 150 predictions are equal
+╭──────────────────────────────────────────────────────────────────────────────╮
+│                         IRIS -- Forest -- Entropy                            │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+Features provided in column major format
+Label array provided
+Number of features: 4
+Number of samples: 150
+Number of trees: 20
+Fraction of samples per tree: 0.63
+Features per tree: 2
+min_samples_leaf: 1
+Largest label id: 2
+Splitting criterion: Gini Impurity
+Classifying using 20 tables/trees
+Prediction took 0.000082 s
+98.00 % correctly classified (147 / 150)
+Feature importance*:
+#  0 : 4.0 %
+#  1 : 13.9 %
+#  2 : 47.8 %
+#  3 : 34.2 %
+
+-> Saving to disk, reading from disk and comparing
+150 / 150 predictions are equal
+VmPeak: 716764 (kb) VmHWM: 1276 (kb)
+```
+</details>
+
+<details> <summary>Example output -- command line arguments</summary>
+
+``` shell
+$ trafo_cli --help
+Usage:
+--train file.tsv
+	table to train on
+--cout file.trf
+	Write the classifier to disk
+--ntree n
+	number of trees in the forest
+--predict file.tsv
+	table of point to classify
+--model file.trf
+	classifer to use
+--classcol name
+	specify the name of the column that contain the class/label
+--tree_samples n
+	Fraction of samples per tree (to override default)
+--tree_features n
+	Number of features per tree
+--min_leaf_size
+	How small a node be before it is automatically turned into a leaf
+--verbose n
+	Set verbosity level
+--entropy
+	Split on entropy instead of Gini impurity
+--xfold n
+	Perform n-fold cross validataion
+
+Example: 10-fold cross validation
+$ trafo --xfold 10 --train file.csv
+```
+
+</details>
 
 ## To do
 - [ ] Feature importance estimation.

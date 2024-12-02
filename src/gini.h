@@ -35,3 +35,8 @@ gini_split(const u32 * restrict class,
            u32  * restrict n_right,
            f64* restrict G_left,
            f64* restrict G_right);
+
+/* Evaluate the gini impurity of a set of class labels */
+double gini_evaluate(const u32 * restrict class,
+                     const u32 npoint,
+                     const u32 max_label);

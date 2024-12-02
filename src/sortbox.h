@@ -75,8 +75,7 @@ void sortbox_split_n(sortbox * P,
 sortbox *
 sortbox_clone(sortbox * B);
 
-/* TODO: Subselect a specific number of samples
- * using specific features
+/* Subselect samples and features features
  * i.e. subselect for a "random" Tree construction.
 */
 sortbox *

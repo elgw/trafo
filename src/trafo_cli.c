@@ -94,16 +94,20 @@ void test_iris_tree(int criterion)
     conf.verbose = 1;
     conf.criterion = criterion;
 
-
-
     trf * F = trafo_fit(&conf);
     assert(F != NULL);
-
 
     /* Predict the training data and compare to training labels */
     u32 * P = trafo_predict(F, iris_F, NULL, iris_ns);
     compare_results(P, iris_L, iris_ns);
 
+    printf("Feature importance*:\n");
+    double * imp = trafo_importance(F);
+    for(u32 ff = 0; ff < conf.n_feature; ff++)
+    {
+        printf("#%3d : %3.1f %%\n", ff, imp[ff]*100.0);
+    }
+    free(imp);
 
     printf("\n-> Saving to disk, reading from disk and comparing\n");
     trafo_save(F, "iris1.trf");
@@ -161,6 +165,14 @@ void test_iris_forest(int criterion)
     trf * F = trafo_fit(&conf);
     u32 * P = trafo_predict(F, iris_F, NULL, iris_ns);
     compare_results(P, iris_L, iris_ns);
+
+    printf("Feature importance*:\n");
+    double * imp = trafo_importance(F);
+    for(u32 ff = 0; ff < conf.n_feature; ff++)
+    {
+        printf("#%3d : %3.1f %%\n", ff, imp[ff]*100.0);
+    }
+    free(imp);
 
     fflush(stdout);
     printf("\n-> Saving to disk, reading from disk and comparing\n");
@@ -283,6 +295,7 @@ trafo_cli_settings * parse_cli(int argc, char ** argv)
 
     struct option longopts[] = {
         {"train",         required_argument, NULL, 'c'},
+        {"help",          no_argument,       NULL, 'h'},
         {"model",         required_argument, NULL, 'm'},
         {"classcol",      required_argument, NULL, 'n'},
         {"classcolID",    required_argument, NULL, 'i'},
@@ -293,13 +306,14 @@ trafo_cli_settings * parse_cli(int argc, char ** argv)
         {"tree_samples",  required_argument, NULL, 's'},
         {"tree_features", required_argument, NULL, 'f'},
         {"min_leaf_size", required_argument, NULL, 'l'},
-        {"verbose",       required_argument, NULL, 'v'},
+        {"verbose",       no_argument,       NULL, 'v'},
+        {"version",       no_argument,       NULL, 'V'},
         {"xfold",         required_argument, NULL, 'x'},
         {NULL, 0, NULL, 0}};
 
     int ch;
     while((ch = getopt_long(argc, argv,
-                            "c:ef:i:l:m:n:p:s:t:v:w:x:",
+                            "c:ef:hi:l:m:n:p:s:t:v:Vw:x:",
                             longopts, NULL)) != -1)
     {
         switch(ch){
@@ -313,6 +327,9 @@ trafo_cli_settings * parse_cli(int argc, char ** argv)
         case 'f':
             conf->tree_features = atol(optarg);
             break;
+        case 'h':
+            usage();
+            exit(EXIT_SUCCESS);
         case 'i':
             conf->classcol_id = atol(optarg);
             break;
@@ -340,6 +357,10 @@ trafo_cli_settings * parse_cli(int argc, char ** argv)
         case 'v':
             conf->verbose = atol(optarg);
             break;
+        case 'V':
+            printf("trafo_cli version %d.%d.%d\n",
+                   TRAFO_VERSION_MAJOR, TRAFO_VERSION_MINOR, TRAFO_VERSION_PATCH);
+            exit(EXIT_SUCCESS);
         case 'w':
             free(conf->classifier_out);
             conf->classifier_out = strdup(optarg);
@@ -821,6 +842,7 @@ int main(int argc, char ** argv)
         test_iris_forest(1);
         print_peak_memory();
         trafo_ut();
+        trafo_cli_settings_free(conf);
         return EXIT_SUCCESS;
     }
 

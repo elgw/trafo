@@ -117,3 +117,26 @@ gini_split(const u32 * restrict class,
     *_nright = npoint - best_nleft;
     return mingini;
 }
+
+double gini_evaluate(const u32 * restrict class,
+                     const u32 npoint,
+                     const u32 max_label)
+{
+    if(npoint  < 2)
+    {
+        return 0;
+    }
+
+    size_t H[max_label + 1];
+
+    memset(H, 0, (max_label+1)*sizeof(size_t));
+
+    /* Initially the "right" histogram contain all points */
+    for(size_t kk = 0; kk < npoint; kk++)
+    {
+        assert(class[kk] <= max_label);
+        H[class[kk]]++;
+    }
+
+    return 1.0 - squaresum(H, npoint, max_label);
+}

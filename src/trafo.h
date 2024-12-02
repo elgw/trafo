@@ -4,7 +4,7 @@
 
 #define TRAFO_VERSION_MAJOR 0
 #define TRAFO_VERSION_MINOR 1
-#define TRAFO_VERSION_PATCH 2
+#define TRAFO_VERSION_PATCH 3
 
 
 /* These are the configuration options for the Random Forest
@@ -93,6 +93,25 @@ uint32_t * trafo_predict(trf * T,
 /* Print out a summary of the settings */
 void
 trafo_print(FILE * fid, const trf * s);
+
+/* Return a vector with the importance for each feature. Returns NULL
+ * if this information is not available.
+ *
+ * When splitting by Gini
+ * at each successful split the importance is increased by
+ * importance(feature) += n*G_0 - (n_left+G_left + n_right*G_right)
+ *
+ * When splitting by Entroty
+ * at each successful split the importance is increased by
+ * importance(feature) += E_0 - (E_left + E_right)
+ *
+ * Please note that the feature importance will be diluted for forests
+ * since each tree normally contain only a subset of the features
+ *
+ * The caller is responsible for freeing the returned memory
+ */
+double *
+trafo_importance(trf * T);
 
 
 /* Save to disk */

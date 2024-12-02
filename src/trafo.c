@@ -34,6 +34,7 @@ typedef struct {
     size_t nalloc;
     size_t nf;
     size_t maxclass;
+    double * importance;
 } ttable;
 
 
@@ -172,10 +173,17 @@ static void
 ttable_grow(ttable * T)
 {
     size_t new_size = T->nalloc*1.2;
+    tnode * old_location = T->nodes;
     T->nodes = reallocarray(T->nodes, new_size, sizeof(tnode));
     assert(T->nodes != NULL);
-    /* Please note: "If the new size is larger than the old size, the
-       added memory will not be initialized" */
+    /* "If the new size is larger than the old size, the
+       added memory will not be initialized".
+
+       So we set it to 0 */
+    if(T->nodes != old_location)
+    {
+        memset(T->nodes + T->nalloc, 0, (new_size-T->nalloc)*sizeof(tnode));
+    }
     T->nalloc = new_size;
     return;
 }
@@ -188,14 +196,34 @@ recurse_tree(sortbox * B,
              size_t start,
              size_t npoints,
              int criterion,
-             const double node_disorder,
+             double node_disorder,
              const size_t tnode_id)
 {
     // printf("Recurse: [%zu, %zu]\n", start, start+npoints-1);
     tnode * node =  &T->nodes[tnode_id];
 
-    if(node_disorder == 0 )
+    if(level == 0)
     {
+        const u32 * cl = sortbox_get_class_array_unsorted(B);
+        if(criterion == 0)
+        {
+            node_disorder =
+                gini_evaluate(cl,
+                              npoints,
+                              sortbox_get_nclass(B));
+            assert(node_disorder <= 1);
+        } else {
+            node_disorder =
+                entropy_evaluate(cl,
+                                 npoints,
+                                 sortbox_get_nclass(B));
+        }
+        assert(node_disorder >= 0);
+    }
+
+    if(node_disorder == 0 && level > 0)
+    {
+        // Finalize the node. All elements have the same class
         const u32 * cl = sortbox_get_class_array_unsorted(B);
         // tnode_id=95 node->left_node=3930079040
         // printf("tnode_id=%zu node->left_node=%u\n", tnode_id, node->left_node);
@@ -238,8 +266,8 @@ recurse_tree(sortbox * B,
 
     for(u32 kk = 0; kk < sortbox_get_nfeature(B); kk++)
     {
-        int ff = rand() % sortbox_get_nfeature(B);
-        ff = kk;
+        //int ff = rand() % sortbox_get_nfeature(B);
+        int ff = kk;
         //printf("ff = %u\n", ff);
 
         double * feature;
@@ -275,7 +303,6 @@ recurse_tree(sortbox * B,
 
         if(criterion == 0)
         {
-
             disorder =
                 gini_split(class, feature,
                            npoints, sortbox_get_nclass(B),
@@ -385,6 +412,24 @@ recurse_tree(sortbox * B,
     node->left_node = left_id;
     node->right_node = right_id;
 
+    /* Record variable and decrease of disorder as a proxy for importance */
+
+    if(criterion == 0)
+    {
+        T->importance[sortbox_map_feature(B, sel_feature)]
+            += ( (double) npoints*node_disorder -
+                 (double) nleft*disorder_left + (double) nright*disorder_right );
+    } else {
+        T->importance[sortbox_map_feature(B, sel_feature)]
+            += (node_disorder - mindisorder);
+    }
+
+
+
+
+    /* Or possibly just the number of affected samples  */
+    //T->importance[sortbox_map_feature(B,sel_feature)] += npoints;
+
     //printf("Running Left\n");
     recurse_tree(B, T,
                  minsize, level+1, start, nleft,
@@ -409,6 +454,7 @@ void trafo_free(trf * s)
         for(size_t kk = 0; kk < s->n_tree; kk++)
         {
             free(s->trees[kk].nodes);
+            free(s->trees[kk].importance);
         }
         free(s->trees);
     }
@@ -554,7 +600,7 @@ trafo_predict(trf * s,
 
     if(X_cm != NULL)
     {
-        printf("CM predictions. s->n_feature = %u\n", s->n_feature);
+        //printf("CM predictions. s->n_feature = %u\n", s->n_feature);
         const double * X = X_cm;
 
 #pragma omp parallel for
@@ -631,12 +677,14 @@ trf *  trafo_fit(trafo_settings * conf)
 
     assert(X != NULL);
 
-    size_t mc = 0;
-    for(size_t kk = 0; kk < s->n_sample; kk++)
     {
-        s->label[kk] > mc ? mc = s->label[kk] : 0;
+        size_t mc = 0;
+        for(size_t kk = 0; kk < s->n_sample; kk++)
+        {
+            s->label[kk] > mc ? mc = s->label[kk] : 0;
+        }
+        s->max_label = mc;
     }
-    s->max_label = mc;
 
     if(s->verbose > 0)
     {
@@ -668,11 +716,13 @@ trf *  trafo_fit(trafo_settings * conf)
     tree_n_sample > s->n_sample ? tree_n_sample = s->n_sample : 0;
     ttable * ttab = calloc(s->n_tree, sizeof(ttable));
     assert(ttab != NULL);
-    for(size_t kk =0 ; kk < s->n_tree; kk++)
+    for(size_t kk = 0 ; kk < s->n_tree; kk++)
     {
         ttab[kk].nalloc = tree_n_sample; // Will grow as needed
         ttab[kk].nodes = calloc(ttab[kk].nalloc, sizeof(tnode));
         assert(ttab[kk].nodes != NULL);
+        ttab[kk].importance = calloc(s->n_feature, sizeof(double));
+        assert(ttab[kk].importance != NULL);
     }
 
 
@@ -854,10 +904,10 @@ int trafo_save(trf * F,
 
     return 0;
 
-fail1:
+ fail1:
     fclose(fid);
 
-fail2:
+ fail2:
     printf("Error opening %s for writing\n", filename);
     return -1;
 }
@@ -928,4 +978,51 @@ trafo_load(const char * filename)
 
     fclose(fid);
     return F;
+}
+
+
+double * trafo_importance(trf * F)
+{
+    if(F == NULL)
+    {
+        return NULL;
+    }
+
+    if(F->n_tree == 0)
+    {
+        return NULL;
+    }
+
+    if(F->trees == NULL)
+    {
+        return NULL;
+    }
+
+    if(F->trees[0].importance == NULL)
+    {
+        return NULL;
+    }
+
+    double * imp = calloc(F->n_feature, sizeof(double));
+    assert(imp != NULL);
+    memset(imp, 0, F->n_feature*sizeof(double));
+
+    for(u32 kk = 0; kk < F->n_tree; kk++)
+    {
+        for(u32 ff = 0; ff < F->n_feature; ff++)
+        {
+            imp[ff] += F->trees[kk].importance[ff];
+        }
+    }
+    double sum = 0;
+    for(u32 ff = 0; ff < F->n_feature; ff++)
+    {
+        sum+=imp[ff];
+    }
+    for(u32 ff = 0; ff < F->n_feature; ff++)
+    {
+        imp[ff] /= sum;
+    }
+
+    return imp;
 }

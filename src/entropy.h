@@ -14,6 +14,10 @@
 *
 */
 
+/* Evaluate the entropy of a set of labels */
+double
+entropy_evaluate(const u32 * class, const u32 npoint, const u32 max_label);
+
 /* Suggests how to split the vector _class_ containing class labels
  * into two partitions of size _nleft and _nright.
  *
