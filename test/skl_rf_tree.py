@@ -60,6 +60,8 @@ if __name__ == '__main__':
     mem1 = get_peak_memory()
     t2 = time.perf_counter()
 
+    print(f"Feature importances: {clf.feature_importances_}")
+
     print(f"Delta memory: {mem1-mem0} kb")
 
     P = clf.predict(X)

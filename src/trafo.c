@@ -15,8 +15,8 @@
 #include "trafo.h"
 #include "trafo_util.h"
 
-enum trafo_criterion{
-    gini, entropy
+enum trafo_criterion {
+    trafo_gini, trafo_entropy
 };
 
 typedef struct  {
@@ -191,30 +191,29 @@ ttable_grow(ttable * T)
 static void
 recurse_tree(sortbox * B,
              ttable * T,
-             uint32_t minsize,
-             size_t level,
-             size_t start,
-             size_t npoints,
-             int criterion,
+             const uint32_t minsize,
+             const size_t level,
+             const size_t start,
+             const size_t npoints,
+             const enum trafo_criterion criterion,
              double node_disorder,
              const size_t tnode_id)
 {
-    // printf("Recurse: [%zu, %zu]\n", start, start+npoints-1);
     tnode * node =  &T->nodes[tnode_id];
 
     if(level == 0)
     {
-        const u32 * cl = sortbox_get_class_array_unsorted(B);
-        if(criterion == 0)
+        const u32 * cl_vector = sortbox_get_class_array_unsorted(B);
+        if(criterion == trafo_gini)
         {
             node_disorder =
-                gini_evaluate(cl,
+                gini_evaluate(cl_vector,
                               npoints,
                               sortbox_get_nclass(B));
             assert(node_disorder <= 1);
         } else {
             node_disorder =
-                entropy_evaluate(cl,
+                entropy_evaluate(cl_vector,
                                  npoints,
                                  sortbox_get_nclass(B));
         }
@@ -223,6 +222,7 @@ recurse_tree(sortbox * B,
 
     if(node_disorder == 0 && level > 0)
     {
+        assert(level > 0);
         // Finalize the node. All elements have the same class
         const u32 * cl = sortbox_get_class_array_unsorted(B);
         // tnode_id=95 node->left_node=3930079040
@@ -244,10 +244,10 @@ recurse_tree(sortbox * B,
     if(npoints <= minsize)
     {
         //printf("Can't split any more\n");
-        const u32 * cl = sortbox_get_class_array_unsorted(B);
+        const u32 * cl_vector = sortbox_get_class_array_unsorted(B);
         node->left_node = 0;
         node->right_node =
-            most_commomax_label(cl+start, npoints,
+            most_commomax_label(cl_vector+start, npoints,
                                 sortbox_get_nclass(B));
         //printf("leaf: minsizes: class:%u\n", node->right_node);
         return;
@@ -301,7 +301,7 @@ recurse_tree(sortbox * B,
         f64 d_left, d_right;
         double disorder;
 
-        if(criterion == 0)
+        if(criterion == trafo_gini)
         {
             disorder =
                 gini_split(class, feature,
@@ -315,6 +315,7 @@ recurse_tree(sortbox * B,
                               npoints, sortbox_get_nclass(B),
                               &nleft, &nright,
                               &d_left, &d_right);
+            //printf("ff=%u E: %f -> %f (%f, %f) d=%f\n",ff,  node_disorder, disorder, d_left, d_right, disorder-node_disorder);
         }
 
         assert(disorder >= 0.0);
@@ -325,20 +326,12 @@ recurse_tree(sortbox * B,
                the data. It is ok. */
         }
 
-        if(gini < mindisorder && nleft > 0)
+        if(disorder < mindisorder && nleft > 0)
         {
+            mindisorder = disorder;
             best_nleft = nleft;
             sel_feature = ff;
-            mindisorder = disorder;
             th = 0.5*(feature[nleft-1] + feature[nleft]);
-            /* Note: - The data is split without regards to ties. It
-             * does not know if there is a treshold that supports the
-             * split. This means that individual trees can't always
-             * reach the optimal classification accuracy.
-             *
-             * Workaround: don't consider splits when
-             * feature[nleft-1] == feature[nleft]
-             */
 
             disorder_left = d_left;
             disorder_right = d_right;
@@ -347,7 +340,7 @@ recurse_tree(sortbox * B,
                 printf("]\n");
                 printf("sel_feature = %u\n", sel_feature);
                 printf("nleft = %u, nright = %u\n", nleft, nright);
-                printf("gini = %f, gleft=%f, gright=%f\n", disorder,
+                printf("disorder = %f, dleft=%f, dright=%f\n", disorder,
                        disorder_left, disorder_right);
             }
         }
@@ -370,18 +363,18 @@ recurse_tree(sortbox * B,
         return;
     }
 
-    //    printf("Will split on feature: %d\n", feature);
-    //    printf("Treshold: %f\n", th);
-
 
     assert(sortbox_map_feature(B, sel_feature) >= (u32) sel_feature);
     node->th = th;
+    /* Note: the variable is mapped back to the original variable id
+     * in case that we are processing a subselection of variabes */
     node->var = sortbox_map_feature(B, sel_feature);
 
     //printf("\n --- will split over feature %u\n", sel_feature);
 
     uint32_t nleft, nright;
 
+    /* Split the sortbox with n elements to the left */
     sortbox_split_n(B,
                     sel_feature, best_nleft,
                     start, npoints,
@@ -414,13 +407,19 @@ recurse_tree(sortbox * B,
 
     /* Record variable and decrease of disorder as a proxy for importance */
 
-    if(criterion == 0)
+    if(0){
+    printf("l=%zu v=%u %f (%f, %f), L=%u, R=%zu\n", level, node->var,
+           node_disorder, disorder_left, disorder_right, best_nleft, (npoints - best_nleft));
+    }
+
+
+    if(criterion == trafo_gini)
     {
-        T->importance[sortbox_map_feature(B, sel_feature)]
+        T->importance[node->var]
             += ( (double) npoints*node_disorder -
-                 (double) nleft*disorder_left + (double) nright*disorder_right );
-    } else {
-        T->importance[sortbox_map_feature(B, sel_feature)]
+                 ( (double) best_nleft*disorder_left + (double) (npoints-best_nleft)*disorder_right ) );
+    } else if (criterion == trafo_entropy){
+        T->importance[node->var]
             += (node_disorder - mindisorder);
     }
 
@@ -502,10 +501,10 @@ trafo_print(FILE * fid, const trf * s)
     fprintf(fid, "Splitting criterion: ");
     switch (s->criterion)
     {
-    case gini:
+    case trafo_gini:
         fprintf(fid, "Gini Impurity\n");
         break;
-    case entropy:
+    case trafo_entropy:
         fprintf(fid, "Entropy\n");
         break;
     default:
@@ -558,13 +557,7 @@ trafo_check(trf * s)
     {
         printf("Error: Invalid samples per tree fraction\n");
     }
-    if(s->criterion > 1 || s->criterion < 0)
-    {
-        printf("Error: Invalid criterion, valid choices are 0=gini, 1=entropy\n"
-               "       Criterion set to gini\n");
 
-        s->criterion = 0;
-    }
     return 0;
 }
 
@@ -657,7 +650,12 @@ trf *  trafo_fit(trafo_settings * conf)
     s->tree_f_sample = conf->tree_f_sample;
     s->verbose = conf->verbose;
     s->min_samples_leaf = conf->min_samples_leaf;
-    s->criterion = conf->criterion;
+    if(conf->entropy)
+    {
+        s->criterion = trafo_entropy;
+    } else {
+        s->criterion = trafo_gini;
+    }
 
     if(trafo_check(s))
     {

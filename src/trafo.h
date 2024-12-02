@@ -63,7 +63,7 @@ typedef struct {
      */
     uint32_t tree_n_feature;
     uint32_t verbose;
-    int criterion; // 0 = gini, 1 = entropy
+    int entropy; // Split criterion: 0 = gini, 1 = entropy
 
 } trafo_settings;
 

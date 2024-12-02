@@ -73,10 +73,10 @@ void compare_results(const u32 * R,
     return;
 }
 
-void test_iris_tree(int criterion)
+void test_iris_tree(int entropy)
 {
     /* IRIS dataset -- builtin */
-    if(criterion == 0)
+    if(entropy == 0)
     {
         print_section("IRIS -- single tree -- Gini Impurity");
     } else {
@@ -92,7 +92,7 @@ void test_iris_tree(int criterion)
     conf.tree_n_feature = iris_nf;
     conf.min_samples_leaf = 1;
     conf.verbose = 1;
-    conf.criterion = criterion;
+    conf.entropy = entropy;
 
     trf * F = trafo_fit(&conf);
     assert(F != NULL);
@@ -144,9 +144,9 @@ void test_iris_tree(int criterion)
     return;
 }
 
-void test_iris_forest(int criterion)
+void test_iris_forest(int entropy)
 {
-    if(criterion == 0)
+    if(entropy == 0)
     {
         print_section("IRIS -- Forest -- Gini Impurity");
     } else {
@@ -161,6 +161,7 @@ void test_iris_forest(int criterion)
     conf.n_sample = iris_ns;
     conf.n_feature = iris_nf;
     conf.verbose = 1;
+    conf.entropy = entropy;
 
     trf * F = trafo_fit(&conf);
     u32 * P = trafo_predict(F, iris_F, NULL, iris_ns);
@@ -651,7 +652,7 @@ void xfold(trafo_cli_settings * conf,
         Tconf.tree_n_feature = conf->tree_features;
         Tconf.tree_f_sample = conf->tree_f_sample;
         Tconf.min_samples_leaf = conf->min_leaf_size;
-        Tconf.criterion = conf->entropy;
+        Tconf.entropy = conf->entropy;
 
         /* Train */
         trf * T = trafo_fit(&Tconf);
@@ -772,7 +773,7 @@ void train_file(trafo_cli_settings * conf)
     Tconf.tree_n_feature = conf->tree_features;
     Tconf.tree_f_sample = conf->tree_f_sample;
     Tconf.min_samples_leaf = conf->min_leaf_size;
-    Tconf.criterion = conf->entropy;
+    Tconf.entropy = conf->entropy;
 
     if(conf->n_tree == 1)
     {
@@ -801,6 +802,19 @@ void train_file(trafo_cli_settings * conf)
     clock_gettime(CLOCK_REALTIME, &t1);
     printf("trafo: Forest training took %.4f s\n",
            timespec_diff(&t1, &t0));
+
+    double * imp = trafo_importance(T);
+    if(imp != NULL)
+    {
+
+        printf("Feature importance*:\n");
+
+        for(u32 ff = 0; ff < Tconf.n_feature; ff++)
+        {
+            printf("#%3d : %3.1f %%\n", ff, imp[ff]*100.0);
+        }
+        free(imp);
+    }
 
     if(conf->classifier_out)
     {

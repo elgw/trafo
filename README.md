@@ -221,117 +221,7 @@ Then just add `-ltrafo` to the linker flags of your project.
 The command line program `trafo_cli` has the iris dataset built in and
 will perform some tests when called without any arguments.
 
-
-<details> <summary>Example output -- built in tests</summary>
-
-```
-$ trafo_cli --version
-trafo_cli version 0.1.3
-$ trafo_cli
-╭──────────────────────────────────────────────────────────────────────────────╮
-│                    IRIS -- single tree -- Gini Impurity                      │
-╰──────────────────────────────────────────────────────────────────────────────╯
-
-Features provided in column major format
-Label array provided
-Number of features: 4
-Number of samples: 150
-Number of trees: 1
-Fraction of samples per tree: 1.00
-Features per tree: 4
-min_samples_leaf: 1
-Largest label id: 2
-Splitting criterion: Gini Impurity
-Classifying using 1 tables/trees
-Prediction took 0.000217 s
-100.00 % correctly classified (150 / 150)
-Feature importance*:
-#  0 : 3.8 %
-#  1 : 3.1 %
-#  2 : 9.0 %
-#  3 : 84.1 %
-
--> Saving to disk, reading from disk and comparing
-150 / 150 predictions are equal
-╭──────────────────────────────────────────────────────────────────────────────╮
-│                       IRIS -- single tree -- Entropy                         │
-╰──────────────────────────────────────────────────────────────────────────────╯
-
-Features provided in column major format
-Label array provided
-Number of features: 4
-Number of samples: 150
-Number of trees: 1
-Fraction of samples per tree: 1.00
-Features per tree: 4
-min_samples_leaf: 1
-Largest label id: 2
-Splitting criterion: Entropy
-Classifying using 1 tables/trees
-Prediction took 0.003085 s
-100.00 % correctly classified (150 / 150)
-Feature importance*:
-#  0 : 13.6 %
-#  1 : 13.1 %
-#  2 : 18.2 %
-#  3 : 55.0 %
-
--> Saving to disk, reading from disk and comparing
-150 / 150 predictions are equal
-VmPeak: 454620 (kb) VmHWM: 1276 (kb)
-╭──────────────────────────────────────────────────────────────────────────────╮
-│                      IRIS -- Forest -- Gini Impurity                         │
-╰──────────────────────────────────────────────────────────────────────────────╯
-
-Features provided in column major format
-Label array provided
-Number of features: 4
-Number of samples: 150
-Number of trees: 20
-Fraction of samples per tree: 0.63
-Features per tree: 2
-min_samples_leaf: 1
-Largest label id: 2
-Splitting criterion: Gini Impurity
-Classifying using 20 tables/trees
-Prediction took 0.000086 s
-99.33 % correctly classified (149 / 150)
-Feature importance*:
-#  0 : 5.0 %
-#  1 : 21.1 %
-#  2 : 38.2 %
-#  3 : 35.8 %
-
--> Saving to disk, reading from disk and comparing
-150 / 150 predictions are equal
-╭──────────────────────────────────────────────────────────────────────────────╮
-│                         IRIS -- Forest -- Entropy                            │
-╰──────────────────────────────────────────────────────────────────────────────╯
-
-Features provided in column major format
-Label array provided
-Number of features: 4
-Number of samples: 150
-Number of trees: 20
-Fraction of samples per tree: 0.63
-Features per tree: 2
-min_samples_leaf: 1
-Largest label id: 2
-Splitting criterion: Gini Impurity
-Classifying using 20 tables/trees
-Prediction took 0.000082 s
-98.00 % correctly classified (147 / 150)
-Feature importance*:
-#  0 : 4.0 %
-#  1 : 13.9 %
-#  2 : 47.8 %
-#  3 : 34.2 %
-
--> Saving to disk, reading from disk and comparing
-150 / 150 predictions are equal
-VmPeak: 716764 (kb) VmHWM: 1276 (kb)
-```
-</details>
+For command line arguments, use with `--help`
 
 <details> <summary>Example output -- command line arguments</summary>
 
@@ -366,6 +256,79 @@ Usage:
 Example: 10-fold cross validation
 $ trafo --xfold 10 --train file.csv
 ```
+
+Just one more example, if you want:
+
+<details> <summary>Example output -- built in tests</summary>
+
+```
+$ trafo_cli --version
+trafo_cli version 0.1.3
+
+$ trafo_cli --train wine.tsv  --ntree 1 --entropy
+Reading from wine.tsv
+columns: 14, data rows: 178
+Found feature column "class"
+Features provided in row major format (to be transposed)
+Label array provided
+Number of features: 13
+Number of samples: 178
+Number of trees: 1
+Fraction of samples per tree: 1.00
+Features per tree: 13
+min_samples_leaf: 1
+Largest label id: 2
+Splitting criterion: Entropy
+trafo: Forest training took 0.0020 s
+Feature importance*:
+#  0 : 2.1 %
+#  1 : 0.0 %
+#  2 : 2.1 %
+#  3 : 0.0 %
+#  4 : 0.0 %
+#  5 : 0.0 %
+#  6 : 42.1 %
+#  7 : 0.0 %
+#  8 : 0.0 %
+#  9 : 21.5 %
+# 10 : 0.0 %
+# 11 : 0.0 %
+# 12 : 32.2 %
+VmPeak: 770996 (kb) VmHWM: 1332 (kb)
+
+$ trafo_cli --train wine.tsv  --ntree 200 --entropy
+Reading from wine.tsv
+columns: 14, data rows: 178
+Found feature column "class"
+Features provided in row major format (to be transposed)
+Label array provided
+Number of features: 13
+Number of samples: 178
+Number of trees: 200
+Fraction of samples per tree: 0.63
+Features per tree: 4
+min_samples_leaf: 1
+Largest label id: 2
+Splitting criterion: Entropy
+trafo: Forest training took 0.0071 s
+Feature importance*:
+#  0 : 9.8 %
+#  1 : 4.8 %
+#  2 : 3.0 %
+#  3 : 3.5 %
+#  4 : 4.3 %
+#  5 : 6.0 %
+#  6 : 17.0 %
+#  7 : 1.9 %
+#  8 : 3.1 %
+#  9 : 10.2 %
+# 10 : 9.2 %
+# 11 : 13.5 %
+# 12 : 13.7 %
+VmPeak: 978908 (kb) VmHWM: 2872 (kb)
+```
+</details>
+
 
 </details>
 
