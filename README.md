@@ -256,6 +256,7 @@ Usage:
 Example: 10-fold cross validation
 $ trafo --xfold 10 --train file.csv
 ```
+</details>
 
 Just one more example, if you want:
 
@@ -330,7 +331,7 @@ VmPeak: 978908 (kb) VmHWM: 2872 (kb)
 </details>
 
 
-</details>
+
 
 ## To do
 
