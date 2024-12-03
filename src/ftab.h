@@ -33,6 +33,9 @@
 #include <unistd.h>
 #endif
 
+#define FTAB_VERSION_MAJOR 0
+#define FTAB_VERSION_MINOR 1
+#define FTAB_VERSION_PATCH 0
 
 /* row-major table */
 typedef struct {

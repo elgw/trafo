@@ -24,6 +24,7 @@ static void
 trim_whitespace(char * str)
 {
     //printf("trimming '%s'\n", str);
+    assert(str != NULL);
     size_t n = strlen(str);
     size_t first = 0;
     size_t last = n;
@@ -173,11 +174,17 @@ int ftab_print(FILE * fid, const ftab_t * T, const char * sep)
 
 ftab_t * ftab_new(int ncol)
 {
+    if(ncol < 1)
+    {
+        fprintf(stderr, "ftab_new requires at least 1 column\n");
+        return NULL;
+    }
     ftab_t * T = calloc(1, sizeof(ftab_t));
     assert(T != NULL);
+    T->nrow = 0;
     T->ncol = ncol;
     T->nrow_alloc = 1024;
-    T->T = malloc(T->ncol*T->nrow_alloc*sizeof(float));
+    T->T = calloc(T->ncol*T->nrow_alloc, sizeof(float));
     assert(T->T != NULL);
     return T;
 }
@@ -205,7 +212,7 @@ parse_col_names(ftab_t * T,
     T->ncol = ncol;
 
     /* Allocate memory */
-    T->colnames = malloc(ncol*sizeof(char*));
+    T->colnames = calloc(ncol, sizeof(char*));
     assert(T->colnames != NULL);
 
     /* Set columns */
@@ -222,6 +229,7 @@ parse_col_names(ftab_t * T,
                 f[strlen(f)-1] = '\0';
             }
         }
+        assert(f != NULL);
         T->colnames[kk] = strdup(f);
         trim_whitespace(T->colnames[kk]);
     }
@@ -322,7 +330,7 @@ ftab_from_dlm(const char * fname,
     // printf("at most %zu lines\n", nrows);
 
     // Allocate memory
-    T->T = malloc(nrows*ncols*sizeof(float));
+    T->T = calloc(nrows*ncols, sizeof(float));
     assert(T->T != NULL);
     T->ncol = ncols;
     T->nrow_alloc = nrows;
@@ -389,7 +397,7 @@ void ftab_sort(ftab_t * T, int col)
         fprintf(stderr, "ftab_sort: Can't use column %d for sorting\n", col);
         exit(EXIT_FAILURE);
     }
-    ftab_sort_pair * P = malloc(T->nrow*sizeof(ftab_sort_pair));
+    ftab_sort_pair * P = calloc(T->nrow, sizeof(ftab_sort_pair));
     assert(P != NULL);
     /* Extract values from col %d and sort */
 
@@ -403,7 +411,7 @@ void ftab_sort(ftab_t * T, int col)
     qsort(P, T->nrow,
           sizeof(ftab_sort_pair),
           ftab_sort_pair_cmp);
-    float * T2 = malloc(T->ncol*T->nrow_alloc*sizeof(float));
+    float * T2 = calloc(T->ncol*T->nrow_alloc, sizeof(float));
     assert(T2 != NULL);
     for(size_t kk = 0; kk< T->nrow; kk++)
     {
@@ -455,6 +463,7 @@ static size_t count_newlines(const char * fname)
 
 void ftab_set_colname(ftab_t * T, int col, const char * name)
 {
+    assert(name != NULL);
     // TODO check that only valid chars are used
     if(col < 0 || col >= (int) T->ncol)
     { return; }
@@ -489,7 +498,7 @@ int ftab_ut(void)
     ftab_print(stdout, T, "\t");
 
     /* Save and read */
-    char * fname = malloc(1024);
+    char * fname = calloc(1024, 1);
     assert(fname != NULL);
 
 
@@ -560,6 +569,8 @@ ftab_t * ftab_concatenate_columns(const ftab_t * L , const ftab_t * R)
     size_t ncol = L->ncol + R->ncol;
 
     ftab_t * T = ftab_new(ncol);
+    assert(T != NULL);
+
     for(size_t kk = 0; kk < L->ncol; kk++)
     {
         ftab_set_colname(T, kk, L->colnames[kk]);

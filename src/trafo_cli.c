@@ -679,6 +679,11 @@ void xfold(trafo_cli_settings * conf,
 
     macc = macc / conf->xfold;
     printf("Mean pred acc: %.2f %%\n", macc);
+    free(Feval);
+    free(Ftrain);
+    free(Leval);
+    free(Ltrain);
+    free(S);
     free(acc);
     return;
 }
