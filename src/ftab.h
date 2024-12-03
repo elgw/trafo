@@ -19,23 +19,13 @@
 /* Floating point-only table stored in row-major format.
 */
 
-
-#include <assert.h>
-#include <inttypes.h>
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-#include <time.h>
-#ifndef WINDOWS
-#include <unistd.h>
-#endif
-
 #define FTAB_VERSION_MAJOR 0
 #define FTAB_VERSION_MINOR 1
 #define FTAB_VERSION_PATCH 0
+
+#include <stdint.h>
+#include <stdio.h>
+
 
 /* row-major table */
 typedef struct {

@@ -16,9 +16,37 @@
 
 #include "ftab.h"
 
-/* Forward declarations for non exported functions */
+#include <assert.h>
+#include <inttypes.h>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
-static size_t count_newlines(const char * fname);
+#include <stdlib.h>
+#include <string.h>
+
+#include <time.h>
+#ifndef WINDOWS
+#include <unistd.h>
+#endif
+
+
+/* Count the number of newlines in a file */
+static size_t count_newlines(const char * fname)
+{
+    FILE * fid = fopen(fname, "r");
+    assert(fid != NULL);
+    size_t N = 0;
+    int c = EOF;
+    while( (c = fgetc(fid) ) != EOF )
+    {
+        if( c == '\n')
+        {
+            N++;
+        }
+    }
+    fclose(fid);
+    return N;
+}
 
 static void
 trim_whitespace(char * str)
@@ -441,23 +469,6 @@ void ftab_insert(ftab_t * T, float * row)
     T->nrow++;
 }
 
-/* Count the number of newlines in a file */
-static size_t count_newlines(const char * fname)
-{
-    FILE * fid = fopen(fname, "r");
-    assert(fid != NULL);
-    size_t N = 0;
-    int c = EOF;
-    while( (c = fgetc(fid) ) != EOF )
-    {
-        if( c == '\n')
-        {
-            N++;
-        }
-    }
-    fclose(fid);
-    return N;
-}
 
 
 
