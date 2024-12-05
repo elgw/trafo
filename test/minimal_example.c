@@ -24,6 +24,8 @@ int main (int argc, char ** argv)
            "-- expecting an error message\n");
 
     trafo_settings C = {0};
+
+    /* This function is in the library */
     trf * T = trafo_fit(&C);
     assert(T == NULL);
 
