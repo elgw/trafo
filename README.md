@@ -1,4 +1,4 @@
-**trafo** (version 0.1.3, [CHANGELOG](CHANGELOG.md)) is a tiny [random
+**trafo** (version 0.1.4, [CHANGELOG](CHANGELOG.md)) is a tiny [random
 forest](https://en.wikipedia.org/wiki/Random_forest) library written
 in C11. Most likely this isn't what you are looking for, but feel free to
 copy/fork/use or have fun finding bugs.
@@ -45,7 +45,7 @@ Load a classifier and apply it to some data
 ``` C
 #include <trafo.h>
 
-trafo * T = trafo_load("classifier.trafo");
+trf * T = trafo_load("classifier.trafo");
 uint32_t * class = trafo_predict(T, features, NULL, n_features);
 trafo_free(T);
 ```
@@ -57,7 +57,7 @@ Train a classifier on labelled data and save it to disk:
 #include <trafo.h>
 
 // Basic configuration via a struct.
-trafo_conf C = {0};
+trafo_settings C = {0};
 // Required: Describe the data
 C.n_sample = n_sample;
 C.n_feature = n_feature;
@@ -68,7 +68,7 @@ C.n_tree = n_tree;
 // .. and possibly more.
 
 // Fitting / Training
-trafo * T = trafo_fit(C);
+trf * T = trafo_fit(&C);
 
 // Use it ...
 
@@ -78,7 +78,9 @@ trafo_save(T, "classifier.trafo");
 trafo_free(T); // And done
 ```
 
-see `trafo.h` for the full API. For more examples, look in `trafo_cli.c`.
+see `trafo.h` for the full API. For more examples, look in
+`trafo_cli.c`. For a minimal program to check that the library was
+installed properly can be found in `test/minimal_example.c`.
 
 ## Performance hints
 

@@ -15,6 +15,17 @@
 #include "trafo.h"
 #include "trafo_util.h"
 
+/* Compile with -fvisibility=hidden
+* then only functions decorated with this macro will be visible
+* in the .so file, check with
+* nm libtrafo.so | grep ' T '
+*/
+#if HAVE___ATTRIBUTE__VISIBILITY_HIDDEN
+#define FOR_EXPORT __attribute__ ((visibility("default")))
+#else
+#define FOR_EXPORT
+#endif
+
 enum trafo_criterion {
     trafo_gini, trafo_entropy
 };
@@ -442,7 +453,8 @@ recurse_tree(sortbox * B,
     return;
 }
 
-void trafo_free(trf * s)
+FOR_EXPORT void
+trafo_free(trf * s)
 {
     if(s == NULL)
     {
@@ -462,7 +474,7 @@ void trafo_free(trf * s)
     return;
 }
 
-void
+FOR_EXPORT void
 trafo_print(FILE * fid, const trf * s)
 {
     int got_features = 0;
@@ -566,7 +578,7 @@ trafo_check(trf * s)
    provided the function will print out the number of correctly
    predicted points. */
 
-u32 *
+FOR_EXPORT u32 *
 trafo_predict(trf * s,
               const f64 * X_cm,
               const f64 * X_rm,
@@ -637,7 +649,8 @@ trafo_predict(trf * s,
     return P;
 }
 
-trf *  trafo_fit(trafo_settings * conf)
+FOR_EXPORT trf *
+trafo_fit(trafo_settings * conf)
 {
     trf * s = calloc(1, sizeof(trf));
     s->F_col_major = conf->F_col_major;
@@ -791,7 +804,8 @@ test_transpose_f64(void)
     return 0;
 }
 
-int trafo_ut(void)
+FOR_EXPORT int
+trafo_ut(void)
 {
     test_transpose_f64();
     return 0;
@@ -867,7 +881,8 @@ static int ttable_from_file(ttable * T, FILE * fid)
     return 0;
 }
 
-int trafo_save(trf * F,
+FOR_EXPORT int
+trafo_save(trf * F,
                const char * filename)
 {
     assert(F != NULL);
@@ -910,7 +925,7 @@ int trafo_save(trf * F,
     return -1;
 }
 
-trf *
+FOR_EXPORT trf *
 trafo_load(const char * filename)
 {
     FILE * fid = fopen(filename, "r");
@@ -979,7 +994,8 @@ trafo_load(const char * filename)
 }
 
 
-double * trafo_importance(trf * F)
+FOR_EXPORT double *
+trafo_importance(trf * F)
 {
     if(F == NULL)
     {

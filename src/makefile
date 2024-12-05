@@ -43,6 +43,12 @@ endif
 FILES=qsort.c prf_util.c prf_forest.c test.c prf_tree.c
 HEADERS=$(wildcard *.h)
 
-TRAFO_SRC = trafo_cli.c trafo.c sortbox.c qsort.c trafo_util.c ftab.c gini.c entropy.c
+LTRAFO_SRC = trafo.c sortbox.c qsort.c trafo_util.c ftab.c gini.c entropy.c
+TRAFO_SRC = $(LTRAFO_SRC) trafo_cli.c
 trafo_cli: $(TRAFO_SRC)
 	$(CC) $(CFLAGS) $(TRAFO_SRC) $(LDFLAGS) -o trafo_cli
+
+VISIBILITY=-DHAVE___ATTRIBUTE__VISIBILITY_HIDDEN -fvisibility=hidden
+
+libtrafo.so: $(LTRAFO_SRC)
+	$(CC) --shared -fPIC $(CFLAGS) $(VISIBILITY) $(LTRAFO_SRC) $(LDFLAGS) -o libtrafo.so
