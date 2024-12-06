@@ -13,7 +13,7 @@ $ python run_benchmark.py 100 # Test a forest with 100 trees
 # Generates: results/benchmarks_ntree100.tsv
 ```
 
-And to summarize the results with command like
+And summarize the results with command like
 
 ```
 python plot_benchmark.py results/benchmarks_ntree100.tsv
