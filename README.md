@@ -16,8 +16,8 @@ Features and Limitations
 - Gini impurity or by Entropy can be used as the splitting criterion for nodes.
 
 - Feature importance: approximations included at almost no extra
-  cost. The more proper (?) feature permutation is simple to add on
-  top of the library -- if needed.
+  cost. The more proper (?) feature permutation algorithm is simple to
+  add on top of the library if needed.
 
 - Command line interface: the binary `trafo_cli` can be used to test the
   library on tsv/csv-formated data although the parser is very basic.
@@ -175,14 +175,16 @@ Results:
 | breast_cancer | trafo    |    0.0027546  |   0.00218933  |      0.00087928 |     0.00132134  |       532.48 |
 | diabetes      | skl      |    0.0142767  |   0.000250696 |      0.00163288 |     5.35689e-05 |      3860.48 |
 | diabetes      | trafo    |    0.0160097  |   0.00231795  |      0.000682   |     0.00124117  |       291.84 |
-| digits        | skl      |    0.0246463  |   0.00018163  |      0.0008926  |     6.99823e-05 |      2088.96 |
+| digits        | skl      |    0.0246463  |   0.00018163  |      0.0008926  |     **6.99823e-05** |      2088.96 |
 | digits        | trafo    |    0.012642   |   0.0014166   |      0.00043184 |     1.41921e-05 |      2069.6  |
 | iris          | skl      |    0.0142313  |   0.000250566 |      0.0003468  |     4.67076e-05 |      1520.64 |
 | iris          | trafo    |    0.00218152 |   0.00394059  |      0.0006894  |     0.00123656  |        46.08 |
 | wine          | skl      |    0.0142528  |   0.000175615 |      0.00035784 |     6.46583e-05 |      1448.96 |
 | wine          | trafo    |    0.00149696 |   0.00264111  |      0.0007174  |     0.00122883  |       189.44 |
 
-Please note that trafo only use a single thread for a single tree.
+Please note that trafo only use a single thread when training a single
+tree. The prediction time on the diabetes dataset stand out, as the
+only case when trafo does not measure better than skl.
 
 ## A forest with 100 trees
 
