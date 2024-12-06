@@ -307,7 +307,7 @@ trafo_cli_settings * parse_cli(int argc, char ** argv)
         {"tree_samples",  required_argument, NULL, 's'},
         {"tree_features", required_argument, NULL, 'f'},
         {"min_leaf_size", required_argument, NULL, 'l'},
-        {"verbose",       no_argument,       NULL, 'v'},
+        {"verbose",       required_argument, NULL, 'v'},
         {"version",       no_argument,       NULL, 'V'},
         {"xfold",         required_argument, NULL, 'x'},
         {NULL, 0, NULL, 0}};
@@ -473,7 +473,17 @@ void predict_file(trafo_cli_settings * conf)
     ftab_free(tab);
 
 
+    struct timespec t0, t1;
+
+    clock_gettime(CLOCK_REALTIME, &t0);
     u32 * P = trafo_predict(T, NULL, F, n_sample);
+    clock_gettime(CLOCK_REALTIME, &t1);
+    if(conf->verbose > 1)
+    {
+        printf("trafo: Prediction took %.6f s\n",
+               timespec_diff(&t1, &t0));
+    }
+
 
     if(L == 0)
     {
@@ -797,15 +807,23 @@ void train_file(trafo_cli_settings * conf)
     }
 
     struct timespec t0, t1;
+    size_t mem0, mem1, mem_tmp;
+    get_peakMemoryKB(&mem_tmp, &mem0);
     clock_gettime(CLOCK_REALTIME, &t0);
     trf * T = trafo_fit(&Tconf);
+    clock_gettime(CLOCK_REALTIME, &t1);
+    get_peakMemoryKB(&mem_tmp, &mem1);
+    if(conf->verbose > 1)
+    {
+        printf("deltaRSS: %zu\n", mem1-mem0);
+    }
     if(T == NULL)
     {
         fprintf(stderr, "Fatal error: trf_fit returned NULL\n");
         exit(EXIT_FAILURE);
     }
-    clock_gettime(CLOCK_REALTIME, &t1);
-    printf("trafo: Forest training took %.4f s\n",
+
+    printf("trafo: Forest training took %.6f s\n",
            timespec_diff(&t1, &t0));
 
     double * imp = trafo_importance(T);

@@ -38,36 +38,39 @@ def print_peak_memory():
 if __name__ == '__main__':
     # print_peak_memory()
 
+
     (header, data) = read_tsv(sys.argv[1])
     X = data[:,0:-1]
     # Y = data[:,-1:]
     Y = data[:,-1]
 
-
     from sklearn.ensemble import RandomForestClassifier
 
-    mem0 = get_peak_memory()
-    t1 = time.perf_counter()
+
     clf = RandomForestClassifier(n_estimators=1)
     clf.n_jobs=-1
     clf.max_features=X.shape[1]
     clf.min_samples_split=2
     clf.bootstrap = False
 
-
-
+    mem0 = get_peak_memory()
+    t1 = time.perf_counter()
     clf = clf.fit(X, Y)
-    mem1 = get_peak_memory()
     t2 = time.perf_counter()
+    mem1 = get_peak_memory()
 
     print(f"Feature importances: {clf.feature_importances_}")
 
-    print(f"Delta memory: {mem1-mem0} kb")
-
-    P = clf.predict(X)
-    print(f"sk: {np.sum(P==Y)} / {len(P)} predicted correctly")
+    print(f"deltaRSS: {mem1-mem0} kb")
 
     t3 = time.perf_counter()
+    P = clf.predict(X)
+    t4 = time.perf_counter()
+
+    print(f"sk: {np.sum(P==Y)} / {len(P)} predicted correctly")
+
     print(clf.get_params())
     print_peak_memory()
-    print(f"sk_timing: Training: {t2-t1:.4f} Prediction {t3-t2:.4f}")
+
+    print(f"tTraining: {t2-t1:.6f}")
+    print(f"tPrediction {t4-t3:.6f}")

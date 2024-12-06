@@ -43,26 +43,37 @@ if __name__ == '__main__':
     # Y = data[:,-1:]
     Y = data[:,-1]
 
+    n_tree=100
+    if len(sys.argv) > 2:
+        n_tree = int(sys.argv[2])
+
 
     from sklearn.ensemble import RandomForestClassifier
 
-    mem0 = get_peak_memory()
-    t1 = time.perf_counter()
-    clf = RandomForestClassifier(n_estimators=100)
+    clf = RandomForestClassifier(n_estimators=n_tree)
+
 
     clf.n_jobs=-1
     clf.min_samples_split=2
 
+    mem0 = get_peak_memory()
+    t1 = time.perf_counter()
     clf = clf.fit(X, Y)
-    mem1 = get_peak_memory()
     t2 = time.perf_counter()
+    mem1 = get_peak_memory()
 
-    print(f"Delta memory: {mem1-mem0} kb")
 
-    P = clf.predict(X)
-    print(f"sk: {np.sum(P==Y)} / {len(P)} predicted correctly")
+    print(f"deltaRSS: {mem1-mem0} kb")
 
     t3 = time.perf_counter()
+    P = clf.predict(X)
+    t4 = time.perf_counter()
+
+
+    print(f"sk: {np.sum(P==Y)} / {len(P)} predicted correctly")
+
+
     print(clf.get_params())
-    # print_peak_memory()
-    print(f"sk_timing: Training: {t2-t1:.4f} Prediction {t3-t2:.4f}")
+
+    print(f"tTraining: {t2-t1:.6f}")
+    print(f"tPrediction {t4-t3:.6f}")

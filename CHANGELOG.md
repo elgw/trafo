@@ -1,3 +1,8 @@
+## 0.1.5
+
+- Predictions performed in parallel regardless of row or column order
+  of the input table.
+
 ## 0.1.4
 
 - Added a minimal program to test that the library is installed and

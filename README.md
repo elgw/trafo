@@ -84,25 +84,30 @@ installed properly can be found in `test/minimal_example.c`.
 
 ## Performance hints
 
-Benchmarks should, among other things, provide averages over multiple
-runs. There are only results from single runs reported here. Test
-system: 4-core AMD Ryzen 3 PRO 3300U.
-
 The random forest implementation in scikit-learn is denoted skl in the
-tables. The memory usage metric are not directly comparable since the
-values for **trafo** includes the whole cli interface.  For skl it is
-just the delta value, i.e. difference in RSS memory before and after
-the call to the `.fit` method, measured with a procedure like this:
+tables.
 
+<details>
+<summary>Python timings and memory measurements</summary>
 ``` python
+# Benchmarking fitting/training
 mem0 = get_peak_memory()
-clf = RandomForestClassifier(...)
-...
+t1 = time.perf_counter()
 clf = clf.fit(X, Y)
-mem1 = get_peak_memory()
-delta_rss = mem1-mem0
+t2 = time.perf_counter()
+mem1 = get_peak_memory() # custom funciton parsing VmHWM from /proc/self/status
+# Benchmarking classification
+t3 = time.perf_counter()
+P = clf.predict(X)
+t4 = time.perf_counter()
+# and the differences were used
+t_train = t2-t1
+t_predict = t4-t3
+mem = mem1-mem0
 ```
-See `test/run_on_test_data.sh` for the full code.
+</details>
+
+See `test/benchmark/` for the full code.
 
 Datasets:
 
@@ -112,9 +117,10 @@ Datasets:
 | digits        | 1797    | 64       | 10      |
 | wine          | 178     | 13       | 3       |
 | breast_cancer | 569     | 30       | 2       |
-| diabetes      | 442     | 10       | 347     |
+| diabetes      | 442     | 10       | 347*    |
 | rand          | 100000  | 100      | 2       |
 
+(*) in case of the diabetes dataset some of the classes have no examples.
 
 ### A single tree
 
@@ -157,24 +163,21 @@ clf.min_samples_split=2
 
 </details>
 
-Results for tree construction:
+Results:
 
-| bin   | dataset       | time (s) | RSS (kb) |
-|-------|---------------|----------|---------:|
-| trafo | iris          | 0.002    |     2436 |
-| trafo | digits        | 0.020    |     6152 |
-| trafo | wine          | 0.006    |     2456 |
-| trafo | breast_cancer | 0.003    |     2928 |
-| trafo | diabetes      | 0.016    |     2648 |
-| trafo | rand          | 3.256    |   323660 |
-| skl   | iris          | 0.015    |     1612 |
-| skl   | digits        | 0.036    |     2192 |
-| skl   | wine          | 0.016    |     1428 |
-| skl   | breast_cancer | 0.016    |     1428 |
-| skl   | diabetes      | 0.027    |     3712 |
-| sk1   | rand          | 13.96    |    48344 |
+| dataset       | method   |   t_train_avg |   t_train_std |   t_predict_avg |   t_predict_std |   mem_fit_kb |
+|:--------------|:---------|--------------:|--------------:|----------------:|----------------:|-------------:|
+| breast_cancer | skl      |    0.0143084  |   0.000207006 |      0.00047848 |     5.32249e-05 |      1464.32 |
+| breast_cancer | trafo    |    0.0027546  |   0.00218933  |      0.00087928 |     0.00132134  |       532.48 |
+| diabetes      | skl      |    0.0142767  |   0.000250696 |      0.00163288 |     5.35689e-05 |      3860.48 |
+| diabetes      | trafo    |    0.0160097  |   0.00231795  |      0.000682   |     0.00124117  |       291.84 |
+| digits        | skl      |    0.0246463  |   0.00018163  |      0.0008926  |     6.99823e-05 |      2088.96 |
+| digits        | trafo    |    0.012642   |   0.0014166   |      0.00043184 |     1.41921e-05 |      2069.6  |
+| iris          | skl      |    0.0142313  |   0.000250566 |      0.0003468  |     4.67076e-05 |      1520.64 |
+| iris          | trafo    |    0.00218152 |   0.00394059  |      0.0006894  |     0.00123656  |        46.08 |
+| wine          | skl      |    0.0142528  |   0.000175615 |      0.00035784 |     6.46583e-05 |      1448.96 |
+| wine          | trafo    |    0.00149696 |   0.00264111  |      0.0007174  |     0.00122883  |       189.44 |
 
-In all cases the input data is correctly classified.
 
 ## A forest with 100 trees
 
@@ -186,23 +189,19 @@ clf.n_jobs=-1
 clf.min_samples_split=2
 ```
 
-| bin   | dataset       | time (s) | RSS (kb) |
-|-------|---------------|----------|---------:|
-| trafo | iris          | 0.045    |     2548 |
-| trafo | digits        | 0.094    |     6940 |
-| trafo | wine          | 0.004    |     2755 |
-| trafo | breast_cancer | 0.015    |     3416 |
-| trafo | diabetes      | 0.121    |     3344 |
-| trafo | rand          | 6.97     |   283088 |
-| skl   | iris          | 0.186    |     2208 |
-| skl   | digits        | 0.225    |     9412 |
-| skl   | wine          | 0.198    |     2512 |
-| skl   | breast_cancer | 0.192    |     2340 |
-| skl   | diabetes      | 0.224    |    98548 |
-| sk1   | rand          | 31.80    |   283560 |
+| dataset       | method   |   t_train_avg |   t_train_std |   t_predict_avg |   t_predict_std |   mem_fit_kb |
+|:--------------|:---------|--------------:|--------------:|----------------:|----------------:|-------------:|
+| breast_cancer | skl      |    0.148502   |    0.0131817  |      0.0155947  |     0.00282572  |      3409.92 |
+| breast_cancer | trafo    |    0.00632796 |    0.00321839 |      0.00056564 |     0.000235739 |       956.96 |
+| diabetes      | skl      |    0.121286   |    0.00621094 |      0.0250204  |     0.00221358  |    109645    |
+| diabetes      | trafo    |    0.0430037  |    0.00228249 |      0.00238732 |     0.00160394  |       762.88 |
+| digits        | skl      |    0.149989   |    0.0185172  |      0.0248226  |     0.00214206  |     11013.1  |
+| digits        | trafo    |    0.0187744  |    0.00139698 |      0.001572   |     0.00147337  |      4522.08 |
+| iris          | skl      |    0.130045   |    0.00827622 |      0.0142564  |     0.000510158 |      2677.76 |
+| iris          | trafo    |    0.00345708 |    0.0047106  |      0.0009314  |     0.00167781  |       343.04 |
+| wine          | skl      |    0.131988   |    0.00568188 |      0.0156189  |     0.00347153  |      2785.28 |
+| wine          | trafo    |    0.00251072 |    0.00167846 |      0.00056372 |     0.000653925 |       317.44 |
 
-The skl memory usage stand out on the diabetes dataset, due to the high
-number of classes?
 
 ## Installation
 

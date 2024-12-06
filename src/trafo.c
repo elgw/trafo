@@ -603,6 +603,7 @@ trafo_predict(trf * s,
         printf("Classifying using %u tables/trees\n", s->n_tree);
     }
 
+
     if(X_cm != NULL)
     {
         //printf("CM predictions. s->n_feature = %u\n", s->n_feature);
@@ -627,18 +628,34 @@ trafo_predict(trf * s,
             P[ss] = argmax_u32(H, s->max_label+1);
         }
     } else {
+        /* If ntree == 1 we don't need H etc, that could be a separate case  */
+        #pragma omp parallel for
         for(size_t ss = 0; ss < n_point; ss ++)
         {
             u32 H[s->max_label+1];
             memset(H, 0, (s->max_label+1)*sizeof(u32));
+            i64 class = -1;
             for(u32 tt = 0; tt < s->n_tree; tt++)
             {
                 u32 res = ttable_classify_vector(s->trees + tt, 1,
                                                  X_rm + ss*s->n_feature,
                                                  s->max_label+1);
                 H[res] ++ ;
+
+                /* If more than 50% of the votes are in a single bin,
+                   the final result can be predicted and there is no
+                   need to continue */
+                if(2*H[res] > s->n_tree){
+                    class = res;
+                    break;
+                }
             }
-            P[ss] = argmax_u32(H, s->max_label+1);
+            if(class == -1)
+            {
+                class = argmax_u32(H, s->max_label+1);
+            }
+            assert(class >= 0);
+            P[ss] = class;
         }
     }
     clock_gettime(CLOCK_REALTIME, &t1);
