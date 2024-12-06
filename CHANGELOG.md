@@ -1,7 +1,8 @@
 ## 0.1.5
 
-- Predictions performed in parallel regardless of row or column order
-  of the input table.
+- Faster predictions: aborts directly when a single class has > 50% of
+  the votes. Works in parallel regardless of row or column order of
+  the input table.
 
 ## 0.1.4
 

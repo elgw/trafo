@@ -55,6 +55,11 @@ print(summary.to_markdown(index=False)) # requires tabulate
 skl = summary[summary['method'] == 'skl']
 trafo = summary[summary['method'] == 'trafo']
 
+np.array(skl['t_train_avg'])/np.array(trafo['t_train_avg'])
+np.array(skl['t_predict_avg'])/np.array(trafo['t_predict_avg'])
+np.array(skl['mem_fit_kb'])/np.array(trafo['mem_fit_kb'])
+
+
 if 0:
     fig, ax = plt.subplots(1)
     ax.scatter(skl['t_train_avg'], trafo['t_train_avg'])

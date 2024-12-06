@@ -1,4 +1,4 @@
-**trafo** (version 0.1.4, [CHANGELOG](CHANGELOG.md)) is a tiny [random
+**trafo** (version 0.1.5, [CHANGELOG](CHANGELOG.md)) is a tiny [random
 forest](https://en.wikipedia.org/wiki/Random_forest) library written
 in C11. Most likely this isn't what you are looking for, but feel free to
 copy/fork/use or have fun finding bugs.
@@ -85,10 +85,12 @@ installed properly can be found in `test/minimal_example.c`.
 ## Performance hints
 
 The random forest implementation in scikit-learn is denoted skl in the
-tables.
+tables. Reported timings and memory usage are averages of 25
+runs. System: 8-Core Amd 3700X running Ubuntu 24. Compiler: GCC 13.2.0.
 
 <details>
 <summary>Python timings and memory measurements</summary>
+
 ``` python
 # Benchmarking fitting/training
 mem0 = get_peak_memory()
@@ -105,6 +107,7 @@ t_train = t2-t1
 t_predict = t4-t3
 mem = mem1-mem0
 ```
+
 </details>
 
 See `test/benchmark/` for the full code.
@@ -118,7 +121,8 @@ Datasets:
 | wine          | 178     | 13       | 3       |
 | breast_cancer | 569     | 30       | 2       |
 | diabetes      | 442     | 10       | 347*    |
-| rand          | 100000  | 100      | 2       |
+| rand5_100     | 100000  | 100      | 2       |
+| rand6_10      | 1000000 | 10       | 2       |
 
 (*) in case of the diabetes dataset some of the classes have no examples.
 
@@ -178,6 +182,7 @@ Results:
 | wine          | skl      |    0.0142528  |   0.000175615 |      0.00035784 |     6.46583e-05 |      1448.96 |
 | wine          | trafo    |    0.00149696 |   0.00264111  |      0.0007174  |     0.00122883  |       189.44 |
 
+Please note that trafo only use a single thread for a single tree.
 
 ## A forest with 100 trees
 
@@ -202,6 +207,21 @@ clf.min_samples_split=2
 | wine          | skl      |    0.131988   |    0.00568188 |      0.0156189  |     0.00347153  |      2785.28 |
 | wine          | trafo    |    0.00251072 |    0.00167846 |      0.00056372 |     0.000653925 |       317.44 |
 
+In summary: scikit-learn takes up to 50 times longer to train. Up to
+28 times longer to predict and use up to 144 times as much memory as
+trafo. Most likely the wrapping layer between python and the c code
+adds a considerable time for these small datasets.
+
+
+| dataset       | method   |   t_train_avg |   t_train_std |   t_predict_avg |   t_predict_std |       mem_fit_kb |
+|:--------------|:---------|--------------:|--------------:|----------------:|----------------:|-----------------:|
+| rand5_100     | skl      |    6.8721     |    0.125042   |      0.218464   |     0.011936    | 347416           |
+| rand5_100     | trafo    |    1.92905    |    0.0493303  |      0.155707   |     0.0169644   | 272929           |
+| rand6_10      | skl      |   39.3289     |    1.0509     |      6.75931    |     0.211933    |      4.20617e+06 |
+| rand6_10      | trafo    |   13.8396     |    0.492196   |      4.15566    |     0.220318    |      1.61522e+06 |
+
+On these bigger datasets, skl use about 3X the time for training, 1.5X
+the time for predictions and somewhere around 2X the memory.
 
 ## Installation
 

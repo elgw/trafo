@@ -14,7 +14,7 @@ datasets = [
     "breast_cancer",
     "diabetes"]
 
-if False:
+if True:
     datasets.append("rand5_100")
     datasets.append("rand6_10")
 
@@ -24,7 +24,7 @@ def run_trafo(tsvfile, ntree=1):
 
     modelfile = os.path.join(datadir, tsvfile + ".trafo")
 
-    ret = subprocess.run(['../build/trafo_cli', '--train', os.path.join(datadir, tsvfile), '--cout', modelfile, "--ntree", str(ntree), '--verbose', '2'], capture_output=True)
+    ret = subprocess.run(['../../build/trafo_cli', '--train', os.path.join(datadir, tsvfile), '--cout', modelfile, "--ntree", str(ntree), '--verbose', '2'], capture_output=True)
 
     if len(ret.stderr) > 0:
         print(f'{ret.args} returned with the following error:')
@@ -50,7 +50,7 @@ def run_trafo(tsvfile, ntree=1):
     assert(t_train != -1)
     assert(mem != -1)
 
-    ret = subprocess.run(['../build/trafo_cli', '--predict', os.path.join(datadir, tsvfile), '--model', modelfile, '--verbose', '2'], capture_output=True)
+    ret = subprocess.run(['../../build/trafo_cli', '--predict', os.path.join(datadir, tsvfile), '--model', modelfile, '--verbose', '2'], capture_output=True)
 
     if len(ret.stderr) > 0:
         print(f'{ret.args} returned with the following error:')
