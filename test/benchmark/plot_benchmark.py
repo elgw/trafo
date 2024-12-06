@@ -50,6 +50,7 @@ for id in ids:
     else:
         summary = pd.concat([summary, row], ignore_index=True)
 
+summary['mem_fit_kb'] = summary['mem_fit_kb'].astype(int)
 print(summary.to_markdown(index=False)) # requires tabulate
 
 skl = summary[summary['method'] == 'skl']
