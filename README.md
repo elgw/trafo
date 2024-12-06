@@ -209,8 +209,11 @@ clf.min_samples_split=2
 
 In summary: scikit-learn takes up to 50 times longer to train. Up to
 28 times longer to predict and use up to 144 times as much memory as
-trafo. Most likely the wrapping layer between python and the c code
-adds a considerable time for these small datasets.
+trafo.
+
+Most likely the wrapping layer between python and the c code adds a
+considerable time for these small datasets, for skl. Here are some
+tests also for the larger datasets:.
 
 
 | dataset       | method   |   t_train_avg |   t_train_std |   t_predict_avg |   t_predict_std |       mem_fit_kb |
