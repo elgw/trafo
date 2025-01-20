@@ -681,7 +681,8 @@ trafo_predict(trf * s,
     {
         printf("Prediction took %f s\n", timespec_diff(&t1, &t0));
     }
-    return} P;
+    return P;
+}
 
 
 FOR_EXPORT trf *
