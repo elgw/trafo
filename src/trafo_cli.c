@@ -46,7 +46,7 @@ double * read_raw(const char * file, size_t N, size_t M)
 {
     printf("Reading %s\n", file);
     printf("N = %zu, M = %zu\n", N, M);
-    FILE * f = fopen(file, "r");
+    FILE * f = fopen(file, "rb");
     if(f == NULL)
     {
         printf("Can't open %s\n", file);

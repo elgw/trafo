@@ -930,7 +930,7 @@ trafo_save(trf * F,
                const char * filename)
 {
     assert(F != NULL);
-    FILE * fid = fopen(filename, "w");
+    FILE * fid = fopen(filename, "wb");
     if(fid == NULL)
     { goto fail2; }
 
@@ -973,7 +973,7 @@ trafo_save(trf * F,
 FOR_EXPORT trf *
 trafo_load(const char * filename)
 {
-    FILE * fid = fopen(filename, "r");
+    FILE * fid = fopen(filename, "rb");
     if(fid == NULL)
     {
         printf("Unable to open %s\n", filename);
