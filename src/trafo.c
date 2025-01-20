@@ -862,7 +862,7 @@ static int ttable_to_file(ttable * T, FILE * fid)
         printf("Error writing to disk (magic)\n");
         return 1;
     }
-    nwritten = fwrite(&(T->nnode), sizeof(u32), 1, fid);
+    nwritten = fwrite(&(T->nnode), sizeof(size_t), 1, fid);
     if(nwritten != 1)
     {
         printf("Error writing to disk (n_nodes)\n");

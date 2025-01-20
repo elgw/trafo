@@ -7,7 +7,6 @@ set (CMAKE_C_STANDARD 11)
 
 if(WIN32)
   add_definitions(-DWINDOWS)
-  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
 #
