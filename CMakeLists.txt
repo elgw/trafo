@@ -69,7 +69,7 @@ if(WIN32)
   target_link_libraries(trafo_cli ${GETOPT_LIBRARY})
   SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GETOPT_LIBRARY}")
   find_path(GETOPT_INCLUDE_DIR getopt.h)
-  target_include_directories(trafo_cli GETOPT_INCLUDE_DIR)
+  target_include_directories(trafo_cli PRIVATE GETOPT_INCLUDE_DIR)
 endif()
 
 
