@@ -5,6 +5,10 @@ project(trafo
 
 set (CMAKE_C_STANDARD 11)
 
+if(WIN32)
+  add_definitions(-DWINDOWS)
+endif()
+
 #
 # Default build type is RELEASE
 #
