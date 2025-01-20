@@ -962,6 +962,7 @@ trafo_save(trf * F,
     return 0;
 
  fail1:
+    printf("Error writing to %s\n", filename);
     fclose(fid);
 
  fail2:
