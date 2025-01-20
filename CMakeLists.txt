@@ -61,6 +61,17 @@ if(MATH_LIBRARY)
 endif()
 
 #
+# Getopt
+#
+if(WIN32)
+  # find_path(GETOPT_INCLUDE_DIR getopt.h)
+  find_library(GETOPT_LIBRARY getopt)
+  message("getopt found at: ${GETOPT_LIBRARY}")
+  SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GETOPT_LIBRARY}")
+endif()
+
+
+#
 # OpenMP
 #
 #  https://cmake.org/cmake/help/v3.9/module/FindOpenMP.html
