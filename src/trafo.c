@@ -600,7 +600,7 @@ FOR_EXPORT u32 *
 trafo_predict(trf * s,
               const f64 * X_cm,
               const f64 * X_rm,
-              size_t n_point)
+              u64 n_point)
 {
     if( (X_rm == NULL) & (X_cm == NULL) )
     {

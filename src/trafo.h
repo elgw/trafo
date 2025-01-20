@@ -97,7 +97,7 @@ void trafo_free(trf * T);
 uint32_t * trafo_predict(trf * T,
                        const fpnumber * X_cm,
                        const fpnumber * X_rm,
-                       size_t n_point);
+                       uint64_t n_point);
 
 /* Print out a summary of the settings */
 void

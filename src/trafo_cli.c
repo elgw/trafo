@@ -868,6 +868,7 @@ int main(int argc, char ** argv)
 {
 #ifndef NDEBUG
     printf("Compiled with DEBUG asserts. Speed is compromised.\n\n");
+    printf("sizeof(size_t) == %zu\n", sizeof(size_t));
 #endif
 
 
