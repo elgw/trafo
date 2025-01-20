@@ -868,6 +868,9 @@ static int ttable_to_file(ttable * T, FILE * fid)
         printf("Error writing to disk (n_nodes)\n");
         return 1;
     }
+    #ifndef NDEBUG
+    printf("Writing %u nodes to disk\n", T->nnode);
+    #endif
     nwritten = fwrite(T->nodes, sizeof(tnode),
                       T->nnode, fid);
     if(nwritten != T->nnode)
@@ -900,6 +903,10 @@ static int ttable_from_file(ttable * T, FILE * fid)
         printf("Error reading from file (n_nodes)\n");
         return -1;
     }
+
+#ifndef NDEBUG
+    printf("Reading %u nodes from disk\n", n_nodes);
+#endif
 
     T->nodes = calloc(n_nodes, sizeof(tnode));
     assert(T->nodes != NULL);

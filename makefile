@@ -1,6 +1,12 @@
 CFLAGS=-Wall -Wextra
 CFLAGS+=-pedantic -std=gnu11 -fopenmp -std=gnu11
-CFLAGS+=-O3 -DNDEBUG
+DEBUG?=0
+
+ifeq ($(DEBUG),1)
+CFLAGS += -O0 -Wno-unknown-pragmas -g3 -fanalyzer
+else
+CFLAGS += -O3 -DNDEBUG
+endif
 
 LTRAFO_SRC=src/trafo.c \
 src/qsort.c \
@@ -34,6 +40,11 @@ libtrafo.so:
 	$(CC) --shared -fPIC $(VISIBILITY) $(CFLAGS) \
 $(LTRAFO_SRC)  -o libtrafo.so
 
+CLI_FILES = $(wildcard src/*.c)
+LDFLAGS=-lm
+
+trafo_cli: $(CLI_FILES)
+	$(CC) $(CFLAGS) $(CLI_FILES) $(LDFLAGS) -o trafo_cli
 
 clean:
 	rm -rf *.o
