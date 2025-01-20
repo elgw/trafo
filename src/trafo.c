@@ -28,6 +28,18 @@
 #define FOR_EXPORT
 #endif
 
+static void
+dw_gettime(struct timespec * t)
+{
+#ifdef WINDOWS
+    timespec_get(t, TIME_UTC); // since C11
+#else
+    clock_gettime(CLOCK_REALTIME, t);
+#endif
+    return;
+}
+
+
 enum trafo_criterion {
     trafo_gini, trafo_entropy
 };
@@ -187,7 +199,11 @@ ttable_grow(ttable * T)
 {
     size_t new_size = T->nalloc*1.2;
     tnode * old_location = T->nodes;
+    #ifdef WINDOWS
+    T->nodes = realloc(T->nodes, new_size*sizeof(tnode));
+    #else
     T->nodes = reallocarray(T->nodes, new_size, sizeof(tnode));
+    #endif
     assert(T->nodes != NULL);
     /* "If the new size is larger than the old size, the
        added memory will not be initialized".
@@ -595,7 +611,7 @@ trafo_predict(trf * s,
         return NULL;
     }
     struct timespec t0, t1;
-    clock_gettime(CLOCK_REALTIME, &t0);
+    dw_gettime(&t0);
 
     u32 * P = calloc(n_point, sizeof(u32));
     assert(P != NULL);
@@ -631,7 +647,7 @@ trafo_predict(trf * s,
         }
     } else {
         /* If ntree == 1 we don't need H etc, that could be a separate case  */
-        #pragma omp parallel for
+#pragma omp parallel for
         for(size_t ss = 0; ss < n_point; ss ++)
         {
             u32 H[s->max_label+1];
@@ -660,13 +676,13 @@ trafo_predict(trf * s,
             P[ss] = class;
         }
     }
-    clock_gettime(CLOCK_REALTIME, &t1);
+    dw_gettime(&t1);
     if(s->verbose > 0)
     {
         printf("Prediction took %f s\n", timespec_diff(&t1, &t0));
     }
-    return P;
-}
+    return} P;
+
 
 FOR_EXPORT trf *
 trafo_fit(trafo_settings * conf)
@@ -724,7 +740,7 @@ trafo_fit(trafo_settings * conf)
 
     struct timespec tictoc_start, tictoc_end;
 
-    clock_gettime(CLOCK_REALTIME, &tictoc_start);
+    dw_gettime(&tictoc_start);
 
     sortbox * B = sortbox_init(X, s->label, s->n_sample, s->n_feature);
 
@@ -787,7 +803,7 @@ trafo_fit(trafo_settings * conf)
 
 
     sortbox_free(B);
-    clock_gettime(CLOCK_REALTIME, &tictoc_end);
+    dw_gettime(&tictoc_end);
     if(conf->verbose > 1)
     {
         printf(" Forest training took %f s\n",
