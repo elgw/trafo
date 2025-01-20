@@ -908,7 +908,8 @@ static int ttable_from_file(ttable * T, FILE * fid)
     nread = fread(T->nodes, sizeof(tnode), n_nodes, fid);
     if(nread != n_nodes)
     {
-        printf("Error reading nodes from disk\n");
+        fprintf(stderr, "Error reading nodes from disk (got %zu, expected %u)\n",
+                nread, n_nodes);
         free(T->nodes);
         free(T);
         return -1;
