@@ -30,11 +30,6 @@ add_library(trafo SHARED
   src/trafo_util.c
   src/qsort.c)
 
-
-set(TRAFO_PUBLIC_HEADERS
-  "src/trafo.h"
-)
-
 add_executable(trafo_cli
   src/entropy.c
   src/ftab.c
@@ -58,6 +53,26 @@ find_library(MATH_LIBRARY m)
 if(MATH_LIBRARY)
   target_link_libraries(trafo ${MATH_LIBRARY})
   target_link_libraries(trafo_cli ${MATH_LIBRARY})
+endif()
+
+
+include(CheckCSourceCompiles)
+check_c_source_compiles(
+  "
+        #include <stdlib.h>
+        static void f(void) __attribute__ ((visibility(\"hidden\")));
+        int main(void) {return 0;}
+    "
+  HAVE___ATTRIBUTE__VISIBILITY_HIDDEN
+)
+
+if(HAVE___ATTRIBUTE__VISIBILITY_HIDDEN)
+  target_compile_options(trafo PUBLIC -DHAVE___ATTRIBUTE__VISIBILITY_HIDDEN -fvisibility=hidden)
+  #target_compile_options(trafo PRIVATE -DHAVE___ATTRIBUTE__VISIBILITY_HIDDEN)
+  set_target_properties(trafo PROPERTIES C_VISIBILITY_PRESET hidden)
+  message(" HAVE___ATTRIBUTE__VISIBILITY_HIDDEN ")
+else()
+  message("NO  HAVE___ATTRIBUTE__VISIBILITY_HIDDEN ")
 endif()
 
 #
@@ -85,29 +100,6 @@ if(OpenMP_C_FOUND)
 endif()
 
 #
-# Only export symbols explicitly marked for export.
-#
-# This should work with gcc/linux and could probably be adjusted for
-# other compiler/os as well.
-#
-
-include(CheckCSourceCompiles)
-check_c_source_compiles(
-  "
-        #include <stdlib.h>
-        static void f(void) __attribute__ ((visibility(\"hidden\")));
-        int main(void) {return 0;}
-    "
-  HAVE___ATTRIBUTE__VISIBILITY_HIDDEN
-)
-
-if(HAVE___ATTRIBUTE__VISIBILITY_HIDDEN)
-  # target_compile_options(trafo PRIVATE -DHAVE___ATTRIBUTE__VISIBILITY_HIDDEN -fvisibility=hidden)
-  target_compile_options(trafo PRIVATE -DHAVE___ATTRIBUTE__VISIBILITY_HIDDEN)
-  set_target_properties(trafo PROPERTIES C_VISIBILITY_PRESET hidden)
-endif()
-
-#
 # Link time optimization
 #
 
@@ -124,9 +116,6 @@ else()
 endif()
 
 include("GNUInstallDirs")
-
-set_target_properties( trafo PROPERTIES
-  PUBLIC_HEADER "${TRAFO_PUBLIC_HEADERS}")
 
 INSTALL(TARGETS trafo
   PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_FULL_INCLUDEDIR}"

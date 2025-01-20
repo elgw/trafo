@@ -2,6 +2,8 @@ CFLAGS=-Wall -Wextra
 CFLAGS+=-pedantic -std=gnu11 -fopenmp -std=gnu11
 DEBUG?=0
 
+CFLAGS+=-fvisibility=hidden
+
 ifeq ($(DEBUG),1)
 CFLAGS += -O0 -Wno-unknown-pragmas -g3 -fanalyzer
 else
@@ -26,6 +28,8 @@ entropy.o
 
 VISIBILITY=-DHAVE___ATTRIBUTE__VISIBILITY_HIDDEN -fvisibility=hidden
 
+# For visibility of static library
+CFLAGS+=-Wl,--exclude-libs=ALL
 
 # $(OBJDIR)/%.o : %.c | $(OBJDIR)
 
