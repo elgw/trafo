@@ -709,6 +709,7 @@ trafo_fit(trafo_settings * conf)
     if(trafo_check(s))
     {
         printf("Invalid settings, unable to continue\n");
+        trafo_free(s);
         return NULL;
     }
 
