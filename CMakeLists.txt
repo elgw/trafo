@@ -9,6 +9,8 @@ if(WIN32)
   add_definitions(-DWINDOWS)
 endif()
 
+add_definitions(-D_DEFAULT_SOURCE)
+
 #
 # Default build type is RELEASE
 #

@@ -1,5 +1,5 @@
 CFLAGS=-Wall -Wextra
-CFLAGS+=-pedantic -std=gnu11 -fopenmp -std=gnu11
+CFLAGS+=-pedantic -std=gnu11 -fopenmp -D_DEFAULT_SOURCE
 DEBUG?=0
 
 CFLAGS+=-fvisibility=hidden
