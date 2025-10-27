@@ -10,6 +10,7 @@ if(WIN32)
 endif()
 
 add_definitions(-D_DEFAULT_SOURCE)
+option(BUILD_SHARED_LIBS "Build shared library" OFF)
 
 #
 # Default build type is RELEASE
@@ -27,7 +28,7 @@ endif()
 set( CMAKE_INSTALL_PREFIX
   /usr )
 
-add_library(trafo SHARED
+add_library(trafo
   src/entropy.c
   src/ftab.c
   src/gini.c
