@@ -28,10 +28,6 @@ if (NOT CMAKE_BUILD_TYPE MATCHES Debug)
   add_definitions(-DNDEBUG)
 endif()
 
-# Don't install to /usr/local/ use /usr/
-set( CMAKE_INSTALL_PREFIX
-  /usr )
-
 add_library(trafo
   src/entropy.c
   src/ftab.c
