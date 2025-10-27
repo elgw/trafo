@@ -42,6 +42,7 @@ add_library(trafo
   src/qsort.c)
 
 add_executable(trafo_cli
+  src/trafo_cli.c
   src/entropy.c
   src/ftab.c
   src/gini.c
@@ -50,9 +51,6 @@ add_executable(trafo_cli
   src/trafo.c
   src/trafo_cli.c
   src/trafo_util.c)
-
-target_link_libraries(trafo_cli
-  trafo)
 
 set_target_properties(trafo_cli
   PROPERTIES INSTALL_RPATH "$ORIGIN")
@@ -106,8 +104,8 @@ else()
   message(WARNING "IPO is not supported: ${output}")
 endif()
 
-include("GNUInstallDirs")
 
+include("GNUInstallDirs")
 INSTALL(TARGETS trafo
   PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
