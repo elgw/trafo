@@ -920,8 +920,7 @@ static int ttable_from_file(ttable * T, FILE * fid)
         fprintf(stderr, "Error reading nodes from disk (got %zu, expected %u)\n",
                 nread, n_nodes);
         free(T->nodes);
-        free(T);
-        return -1;
+        return EXIT_FAILURE;
     }
 
     return 0;
@@ -1031,13 +1030,16 @@ trafo_load(const char * filename)
     {
         if(ttable_from_file(&F->trees[kk], fid))
         {
-            printf("Error reading tree %zu\n", kk);
-            assert(0);
+            goto fail_read;
         }
     }
 
     fclose(fid);
     return F;
+fail_read:
+    trafo_free(F);
+    printf("Error: can't read tree from %s. File is corrupt or bug?\n", filename);
+    return NULL;
 }
 
 
