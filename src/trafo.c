@@ -920,6 +920,7 @@ static int ttable_from_file(ttable * T, FILE * fid)
         fprintf(stderr, "Error reading nodes from disk (got %zu, expected %u)\n",
                 nread, n_nodes);
         free(T->nodes);
+        T->nodes = NULL;
         return EXIT_FAILURE;
     }
 
